@@ -2,7 +2,7 @@
     "id": "obsidian-expander",
     "name": "Expander",
     "description": "Replace variables across your vault using HTML comment markers. Supports static values and dynamic functions.",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "minAppVersion": "1.4.0",
     "isDesktopOnly": false,
     "author": "Sébastien Dubois",
