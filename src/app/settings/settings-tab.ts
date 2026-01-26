@@ -25,11 +25,18 @@ export class ExpanderSettingTab extends PluginSettingTab {
         renderReplacementList({
             containerEl: replacementContainer,
             replacements: this.plugin.settings.replacements,
-            onUpdate: (replacements) => {
+            onSave: (replacements) => {
+                // Save without re-render
                 this.plugin.updateSettings((draft) => {
                     draft.replacements = replacements
                 })
-                this.display() // Re-render
+            },
+            onStructuralChange: (replacements) => {
+                // Save and re-render for add/delete/reorder
+                this.plugin.updateSettings((draft) => {
+                    draft.replacements = replacements
+                })
+                this.display()
             }
         })
 

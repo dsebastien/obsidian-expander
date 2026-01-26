@@ -27,6 +27,17 @@
     border: 1px solid var(--background-modifier-border);
 }
 
+/* Stack label above input for key/value rows */
+.exp-replacement-key-row,
+.exp-replacement-value-row {
+    @apply flex flex-col items-start gap-1;
+}
+
+.exp-replacement-key-row .setting-item-info,
+.exp-replacement-value-row .setting-item-info {
+    @apply w-full flex-none pb-0;
+}
+
 .exp-replacement-key-row .setting-item-control,
 .exp-replacement-value-row .setting-item-control {
     @apply w-full;

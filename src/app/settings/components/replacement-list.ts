@@ -1,4 +1,4 @@
-import { Setting } from 'obsidian'
+import { Notice, Setting } from 'obsidian'
 import type { Replacement } from '../../types/plugin-settings.intf'
 import { validateKey } from '../../../utils/validation'
 import { isFunctionExpression, evaluateValue } from '../../services/function-evaluator'
@@ -9,14 +9,45 @@ import { isFunctionExpression, evaluateValue } from '../../services/function-eva
 interface ReplacementListProps {
     containerEl: HTMLElement
     replacements: Replacement[]
-    onUpdate: (replacements: Replacement[]) => void
+    onSave: (replacements: Replacement[]) => void
+    onStructuralChange: (replacements: Replacement[]) => void
+}
+
+/**
+ * Deep clone replacements to create local mutable state
+ */
+function cloneReplacements(replacements: Replacement[]): Replacement[] {
+    return replacements.map((r) => ({ ...r }))
 }
 
 /**
  * Render the replacement list component
  */
 export function renderReplacementList(props: ReplacementListProps): void {
-    const { containerEl, replacements, onUpdate } = props
+    const { containerEl, replacements, onSave, onStructuralChange } = props
+
+    // Local mutable state - changes here don't trigger re-renders
+    const localReplacements = cloneReplacements(replacements)
+    let hasUnsavedChanges = false
+
+    // Track the save button for enabling/disabling
+    let saveButtonEl: HTMLButtonElement | null = null
+
+    const markDirty = (): void => {
+        hasUnsavedChanges = true
+        if (saveButtonEl) {
+            saveButtonEl.disabled = false
+            saveButtonEl.classList.add('mod-cta')
+        }
+    }
+
+    const markClean = (): void => {
+        hasUnsavedChanges = false
+        if (saveButtonEl) {
+            saveButtonEl.disabled = true
+            saveButtonEl.classList.remove('mod-cta')
+        }
+    }
 
     // Header
     new Setting(containerEl).setName('Replacement definitions').setHeading()
@@ -26,42 +57,68 @@ export function renderReplacementList(props: ReplacementListProps): void {
             'Values can be static text or function expressions like now().format("YYYY-MM-DD").'
     )
 
-    // Add new replacement button
-    new Setting(containerEl).addButton((button) => {
-        button
-            .setButtonText('Add replacement')
-            .setCta()
-            .onClick(() => {
-                const newReplacement: Replacement = {
-                    key: '',
-                    value: '',
-                    enabled: true
-                }
-                onUpdate([...replacements, newReplacement])
-            })
+    // Action buttons row
+    const actionRow = new Setting(containerEl)
+
+    actionRow.addButton((button) => {
+        button.setButtonText('Add replacement').onClick(() => {
+            // Save current state first, then add new item
+            const newReplacement: Replacement = {
+                key: '',
+                value: '',
+                enabled: true
+            }
+            onStructuralChange([...localReplacements, newReplacement])
+        })
+    })
+
+    actionRow.addButton((button) => {
+        saveButtonEl = button.buttonEl
+        button.setButtonText('Save').onClick(() => {
+            if (hasUnsavedChanges) {
+                onSave(localReplacements)
+                markClean()
+                new Notice('Settings saved')
+            }
+        })
+        // Initially disabled
+        button.buttonEl.disabled = true
     })
 
     // List of replacements
     const listEl = containerEl.createDiv({ cls: 'exp-replacement-list' })
 
-    for (let i = 0; i < replacements.length; i++) {
-        const replacement = replacements[i]
+    for (let i = 0; i < localReplacements.length; i++) {
+        const replacement = localReplacements[i]
         if (!replacement) continue
 
-        renderReplacementItem(listEl, replacement, i, replacements, onUpdate)
+        renderReplacementItem({
+            containerEl: listEl,
+            replacement,
+            index: i,
+            allReplacements: localReplacements,
+            onFieldChange: markDirty,
+            onStructuralChange
+        })
     }
+}
+
+interface ReplacementItemProps {
+    containerEl: HTMLElement
+    replacement: Replacement
+    index: number
+    allReplacements: Replacement[]
+    onFieldChange: () => void
+    onStructuralChange: (replacements: Replacement[]) => void
 }
 
 /**
  * Render a single replacement item
  */
-function renderReplacementItem(
-    containerEl: HTMLElement,
-    replacement: Replacement,
-    index: number,
-    allReplacements: Replacement[],
-    onUpdate: (replacements: Replacement[]) => void
-): void {
+function renderReplacementItem(props: ReplacementItemProps): void {
+    const { containerEl, replacement, index, allReplacements, onFieldChange, onStructuralChange } =
+        props
+
     const itemEl = containerEl.createDiv({ cls: 'exp-replacement-item' })
 
     // Key input row
@@ -73,12 +130,9 @@ function renderReplacementItem(
         text.setPlaceholder('my-key')
             .setValue(replacement.key)
             .onChange((value) => {
-                const updated = [...allReplacements]
-                const item = updated[index]
-                if (item) {
-                    item.key = value
-                    onUpdate(updated)
-                }
+                // Update local state directly - no re-render
+                replacement.key = value
+                onFieldChange()
 
                 // Validate key
                 const error = validateKey(value)
@@ -123,12 +177,9 @@ function renderReplacementItem(
         text.setPlaceholder('Static value or now().format("YYYY-MM-DD")')
             .setValue(replacement.value)
             .onChange((value) => {
-                const updated = [...allReplacements]
-                const item = updated[index]
-                if (item) {
-                    item.value = value
-                    onUpdate(updated)
-                }
+                // Update local state directly - no re-render
+                replacement.value = value
+                onFieldChange()
 
                 updateValuePreview(value, valuePreviewEl)
             })
@@ -145,12 +196,9 @@ function renderReplacementItem(
     controlsRow
         .addToggle((toggle) => {
             toggle.setValue(replacement.enabled).onChange((value) => {
-                const updated = [...allReplacements]
-                const item = updated[index]
-                if (item) {
-                    item.enabled = value
-                    onUpdate(updated)
-                }
+                // Update local state directly - no re-render
+                replacement.enabled = value
+                onFieldChange()
             })
         })
         .addExtraButton((button) => {
@@ -159,7 +207,7 @@ function renderReplacementItem(
                 .setTooltip('Delete replacement')
                 .onClick(() => {
                     const updated = allReplacements.filter((_, idx) => idx !== index)
-                    onUpdate(updated)
+                    onStructuralChange(updated)
                 })
         })
 
@@ -176,7 +224,7 @@ function renderReplacementItem(
                     if (prev && current) {
                         updated[index - 1] = current
                         updated[index] = prev
-                        onUpdate(updated)
+                        onStructuralChange(updated)
                     }
                 })
         })
@@ -194,7 +242,7 @@ function renderReplacementItem(
                     if (next && current) {
                         updated[index + 1] = current
                         updated[index] = next
-                        onUpdate(updated)
+                        onStructuralChange(updated)
                     }
                 })
         })
