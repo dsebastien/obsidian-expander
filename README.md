@@ -1,6 +1,6 @@
 # Obsidian Expander
 
-Replace variables across your Obsidian vault using HTML comment markers. Configure key-value pairs in settings, and Expander will automatically substitute them throughout your notes.
+Replace variables across your Obsidian vault using HTML comment markers. Configure key-value pairs in settings, and Expander will automatically substitute them throughout your notes, and keep those updated too.
 
 ## Features
 
@@ -13,11 +13,11 @@ Replace variables across your Obsidian vault using HTML comment markers. Configu
     - **Once-and-Eject**: Updates once, removes markers
 - **Folder Filtering**: Choose which folders to scan or ignore
 - **Visual Feedback**: Mode badges and refresh buttons in the editor
-- **Commands**: Replace values in current note or entire vault
+- **Commands**: Replace values in current note or entire vault, add new expansion, ...
 
 ## Quick Start
 
-1. Install the plugin from Obsidian Community Plugins
+1. Install the plugin from Obsidian Community Plugins (NOT supported yet; install manually or use BRAT)
 2. Open **Settings → Expander**
 3. Add a replacement (e.g., key: `today`, value: `now().format("YYYY-MM-DD")`)
 4. In your note, add:
@@ -59,23 +59,7 @@ Full documentation available at [docs/](docs/README.md).
 
 ## Development
 
-### Prerequisites
-
-- [Bun](https://bun.sh/) (latest version)
-- [Git](https://git-scm.com/)
-- An Obsidian vault for testing
-
-### Commands
-
-| Command             | Description                       |
-| ------------------- | --------------------------------- |
-| `bun install`       | Install dependencies              |
-| `bun run dev`       | Development build with watch mode |
-| `bun run build`     | Production build                  |
-| `bun run tsc:watch` | Type check in watch mode          |
-| `bun run lint`      | Run ESLint                        |
-| `bun run format`    | Format with Prettier              |
-| `bun test`          | Run tests                         |
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for build instructions, testing setup, and contribution guidelines.
 
 ## Support
 
