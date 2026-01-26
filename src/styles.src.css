@@ -8,3 +8,146 @@
 .support-header-margin {
     @apply mb-5;
 }
+
+/* ========================================
+   EXPANDER SETTINGS UI
+   ======================================== */
+
+.exp-settings-section {
+    @apply mb-6;
+}
+
+.exp-replacement-list {
+    @apply flex flex-col gap-4;
+}
+
+.exp-replacement-item {
+    @apply p-4 rounded-lg;
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+}
+
+.exp-replacement-key-row .setting-item-control,
+.exp-replacement-value-row .setting-item-control {
+    @apply w-full;
+}
+
+.exp-replacement-key-row input,
+.exp-value-textarea {
+    @apply w-full;
+}
+
+.exp-value-textarea {
+    @apply min-h-[60px] font-mono text-sm;
+    resize: vertical;
+}
+
+.exp-key-error {
+    @apply text-xs mt-1 hidden;
+    color: var(--text-error);
+}
+
+.exp-key-error.visible {
+    @apply block;
+}
+
+.exp-input-error {
+    border-color: var(--text-error) !important;
+}
+
+.exp-value-preview {
+    @apply text-xs mt-1 px-2 py-1 rounded hidden;
+    background-color: var(--background-primary-alt);
+    color: var(--text-muted);
+}
+
+.exp-value-preview.visible {
+    @apply block;
+}
+
+.exp-value-preview.exp-preview-error {
+    color: var(--text-error);
+}
+
+.exp-replacement-controls {
+    @apply border-t pt-2 mt-2;
+    border-color: var(--background-modifier-border);
+}
+
+.exp-folder-textarea {
+    @apply min-h-[60px] w-full;
+    resize: vertical;
+}
+
+/* ========================================
+   EXPANDER EDITOR DECORATIONS
+   ======================================== */
+
+/* Widget container */
+.exp-widgets {
+    @apply inline-flex items-center gap-1 align-middle;
+}
+
+/* Mode badges */
+.exp-badge {
+    @apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium;
+    font-family: var(--font-interface);
+    line-height: 1;
+}
+
+.exp-badge-auto {
+    background-color: color-mix(in srgb, var(--color-blue) 20%, transparent);
+    color: var(--color-blue);
+    border: 1px solid color-mix(in srgb, var(--color-blue) 40%, transparent);
+}
+
+.exp-badge-manual {
+    background-color: color-mix(in srgb, var(--color-orange) 20%, transparent);
+    color: var(--color-orange);
+    border: 1px solid color-mix(in srgb, var(--color-orange) 40%, transparent);
+}
+
+.exp-badge-once {
+    background-color: color-mix(in srgb, var(--color-purple) 20%, transparent);
+    color: var(--color-purple);
+    border: 1px solid color-mix(in srgb, var(--color-purple) 40%, transparent);
+}
+
+.exp-badge-eject {
+    background-color: color-mix(in srgb, var(--color-red) 20%, transparent);
+    color: var(--color-red);
+    border: 1px solid color-mix(in srgb, var(--color-red) 40%, transparent);
+}
+
+.exp-badge-icon {
+    @apply flex items-center;
+}
+
+.exp-badge-icon svg {
+    @apply w-3 h-3;
+}
+
+/* Refresh button */
+.exp-refresh-button {
+    @apply inline-flex items-center justify-center cursor-pointer;
+    @apply p-1 rounded transition-all duration-150;
+    background-color: transparent;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+}
+
+.exp-refresh-button:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--text-accent);
+    border-color: var(--background-modifier-border);
+}
+
+.exp-refresh-button:active {
+    @apply scale-95;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.exp-refresh-button svg {
+    @apply w-4 h-4;
+}

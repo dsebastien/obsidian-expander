@@ -1,8 +1,8 @@
 {
-    "id": "my-plugin",
-    "name": "My Plugin",
-    "description": "TODO: Add your plugin description here",
-    "version": "2.0.4",
+    "id": "obsidian-expander",
+    "name": "Expander",
+    "description": "Replace variables across your vault using HTML comment markers. Supports static values and dynamic functions.",
+    "version": "1.0.0",
     "minAppVersion": "1.4.0",
     "isDesktopOnly": false,
     "author": "Sébastien Dubois",

@@ -1,34 +1,63 @@
-# Obsidian Plugin Template (Bun)
+# Obsidian Expander
 
-A modern Obsidian plugin template using **Bun** as the package manager and bundler, with TypeScript, Tailwind CSS v4, ESLint, Prettier, and automated release workflows.
+Replace variables across your Obsidian vault using HTML comment markers. Configure key-value pairs in settings, and Expander will automatically substitute them throughout your notes.
 
 ## Features
 
-- **Bun** for fast package management and bundling
-- **TypeScript** with strict configuration
-- **Tailwind CSS v4** for styling
-- **ESLint + Prettier** for code quality
-- **Husky + lint-staged** for pre-commit hooks
-- **Commitizen + Conventional Commits** for standardized commit messages
-- **GitHub Actions** for CI/CD and automated releases
-- **Immer** for immutable state management
-- **Zod** for runtime validation
-
-## Getting Started
-
-See [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md) for detailed instructions on how to use this template to create your own Obsidian plugin.
+- **Variable Replacement**: Define key-value pairs that get expanded throughout your vault
+- **Dynamic Values**: Use function expressions like `now().format("YYYY-MM-DD")` for dynamic content
+- **Update Modes**: Control when expansions update
+    - **Auto**: Updates automatically on file changes
+    - **Manual**: Updates only via command or button
+    - **Once**: Updates once, then never again
+    - **Once-and-Eject**: Updates once, removes markers
+- **Folder Filtering**: Choose which folders to scan or ignore
+- **Visual Feedback**: Mode badges and refresh buttons in the editor
+- **Commands**: Replace values in current note or entire vault
 
 ## Quick Start
 
-1. Click "Use this template" on GitHub to create a new repository
-2. Clone your new repository
-3. Follow the setup instructions in [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)
-4. Run `bun install` to install dependencies
-5. Run `bun run dev` to start development
+1. Install the plugin from Obsidian Community Plugins
+2. Open **Settings → Expander**
+3. Add a replacement (e.g., key: `today`, value: `now().format("YYYY-MM-DD")`)
+4. In your note, add:
+    ```markdown
+    <!-- expander: today --><!-- /expander: today -->
+    ```
+5. The value will be automatically inserted between the markers
+
+## Syntax
+
+```markdown
+<!-- expander: key -->value<!-- /expander: key -->
+```
+
+Update mode variants:
+
+- `<!-- expander: key -->` - Auto mode
+- `<!-- expander-manual: key -->` - Manual mode
+- `<!-- expander-once: key -->` - Once mode
+- `<!-- expander-once-and-eject: key -->` - Once-and-eject mode
+
+## Functions
+
+Dynamic values using function expressions:
+
+| Function            | Description       | Example                        |
+| ------------------- | ----------------- | ------------------------------ |
+| `now()`             | Current date/time | `now().format("YYYY-MM-DD")`   |
+| `today()`           | Today at midnight | `today().format("MM/DD/YYYY")` |
+| `format(pattern)`   | Format date       | `now().format("HH:mm")`        |
+| `lower()`           | Lowercase         | `now().format("MMMM").lower()` |
+| `upper()`           | Uppercase         | `now().format("MMMM").upper()` |
+| `trim()`            | Trim whitespace   |                                |
+| `replace(old, new)` | Replace text      | `replace("-", "/")`            |
+
+## Documentation
+
+Full documentation available at [docs/](docs/README.md).
 
 ## Development
-
-See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed development instructions.
 
 ### Prerequisites
 
@@ -48,16 +77,25 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed development instructions.
 | `bun run format`    | Format with Prettier              |
 | `bun test`          | Run tests                         |
 
-## Contributing
+## Support
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
+If you find this plugin useful, consider supporting my work:
+
+- [GitHub Sponsors](https://github.com/sponsors/dsebastien)
+- [Buy me a coffee](https://www.buymeacoffee.com/dsebastien)
+- [Check out my products](https://store.dsebastien.net)
 
 ## License
 
 MIT License - see [LICENSE](./LICENSE) for details.
 
-## News & Support
+## News & Updates
 
-<!-- TODO: Update these links with your own -->
+To stay up to date about this plugin, Obsidian in general, Personal Knowledge Management and note-taking:
 
-To stay up to date about this plugin, Obsidian in general, Personal Knowledge Management and note-taking, subscribe to [my newsletter](https://your-newsletter-url.com). Note that the best way to support my work is to become a paid subscriber ❤️.
+- Subscribe to [my newsletter](https://dsebastien.net/newsletter)
+- Follow me on [X/Twitter](https://x.com/dSebastien)
+
+## Author
+
+Created by [Sébastien Dubois](https://dsebastien.net) ([@dSebastien](https://x.com/dSebastien))
