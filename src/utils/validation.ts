@@ -1,4 +1,4 @@
-import { KEY_PATTERN } from '../constants'
+import { KEY_PATTERN } from '../app/constants'
 
 /**
  * Check if a key is valid kebab-case format

@@ -1,5 +1,5 @@
-import type { UpdateMode } from '../constants'
-import type { ExpanderMatch } from '../types/expander.types'
+import type { UpdateMode } from '../app/constants'
+import type { ExpanderMatch } from '../app/types/expander.types'
 
 /**
  * Pre-compiled regex for matching all expander marker variants

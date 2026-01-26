@@ -5,7 +5,7 @@ import { RangeSetBuilder } from '@codemirror/state'
 import type { App, TFile } from 'obsidian'
 import type { PluginSettings } from './types/plugin-settings.intf'
 import type { UpdateMode } from './constants'
-import { findExpansions } from './utils/find-expansions'
+import { findExpansions } from '../utils/regex'
 
 /**
  * Icon SVGs for mode badges

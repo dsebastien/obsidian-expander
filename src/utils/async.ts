@@ -1,4 +1,4 @@
-import { BATCH_SIZE } from '../constants'
+import { BATCH_SIZE } from '../app/constants'
 
 /**
  * Process items in batches with concurrency control

@@ -12,6 +12,8 @@
  */
 
 import { log } from '../../utils/log'
+import { DateValue, createNow, createToday } from '../../utils/date'
+import { StringValue, createString } from '../../utils/string'
 
 /**
  * Token types for expression parsing
@@ -182,74 +184,6 @@ function parseFunctionCall(
     return { call: { name, args }, newPos: pos }
 }
 
-/**
- * Date wrapper class for chaining operations
- */
-class DateValue {
-    constructor(private date: Date) {}
-
-    format(pattern: string): string {
-        // Simple date formatting (subset of Moment.js patterns)
-        const year = this.date.getFullYear()
-        const month = this.date.getMonth() + 1
-        const day = this.date.getDate()
-        const hours = this.date.getHours()
-        const minutes = this.date.getMinutes()
-        const seconds = this.date.getSeconds()
-
-        const pad = (n: number, width: number = 2): string => n.toString().padStart(width, '0')
-
-        return pattern
-            .replace(/YYYY/g, year.toString())
-            .replace(/YY/g, year.toString().slice(-2))
-            .replace(/MM/g, pad(month))
-            .replace(/M/g, month.toString())
-            .replace(/DD/g, pad(day))
-            .replace(/D/g, day.toString())
-            .replace(/HH/g, pad(hours))
-            .replace(/H/g, hours.toString())
-            .replace(/hh/g, pad(hours % 12 || 12))
-            .replace(/h/g, (hours % 12 || 12).toString())
-            .replace(/mm/g, pad(minutes))
-            .replace(/m/g, minutes.toString())
-            .replace(/ss/g, pad(seconds))
-            .replace(/s/g, seconds.toString())
-            .replace(/A/g, hours >= 12 ? 'PM' : 'AM')
-            .replace(/a/g, hours >= 12 ? 'pm' : 'am')
-    }
-
-    toString(): string {
-        return this.date.toISOString()
-    }
-}
-
-/**
- * String wrapper class for chaining operations
- */
-class StringValue {
-    constructor(private str: string) {}
-
-    lower(): StringValue {
-        return new StringValue(this.str.toLowerCase())
-    }
-
-    upper(): StringValue {
-        return new StringValue(this.str.toUpperCase())
-    }
-
-    trim(): StringValue {
-        return new StringValue(this.str.trim())
-    }
-
-    replace(pattern: string, replacement: string): StringValue {
-        return new StringValue(this.str.replace(new RegExp(pattern, 'g'), replacement))
-    }
-
-    toString(): string {
-        return this.str
-    }
-}
-
 type EvaluationResult = DateValue | StringValue | string
 
 /**
@@ -270,17 +204,14 @@ function evaluateFunctionCalls(calls: FunctionCall[]): EvaluationResult {
     // Initial function call
     switch (firstCall.name) {
         case 'now':
-            result = new DateValue(new Date())
+            result = createNow()
             break
-        case 'today': {
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
-            result = new DateValue(today)
+        case 'today':
+            result = createToday()
             break
-        }
         default:
             // Start with empty string for string functions
-            result = new StringValue('')
+            result = createString('')
     }
 
     // Process chain
@@ -299,13 +230,13 @@ function evaluateFunctionCalls(calls: FunctionCall[]): EvaluationResult {
                     break
                 default:
                     // Convert to string and continue
-                    result = new StringValue(result.toString())
+                    result = createString(result.toString())
                     result = applyStringMethod(result, call)
             }
         } else if (result instanceof StringValue) {
             result = applyStringMethod(result, call)
         } else if (typeof result === 'string') {
-            result = new StringValue(result)
+            result = createString(result)
             result = applyStringMethod(result, call)
         }
     }

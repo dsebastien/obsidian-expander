@@ -8,7 +8,7 @@ import type { Draft } from 'immer'
 import { ExpanderService } from './services/expander.service'
 import { FileProcessorService } from './services/file-processor.service'
 import { registerCommands } from './commands'
-import { debounce } from './utils/debounce'
+import { debounce } from '../utils/timing'
 import { MINIMUM_MS_BETWEEN_EVENTS } from './constants'
 import { createExpanderExtension } from './editor-extension'
 

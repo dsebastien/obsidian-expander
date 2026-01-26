@@ -2,8 +2,8 @@ import type { App, TFile } from 'obsidian'
 import type { PluginSettings } from '../types/plugin-settings.intf'
 import type { ExpanderMatch, ProcessingResult, ReplacementResult } from '../types/expander.types'
 import type { ExpanderService } from './expander.service'
-import { findExpansions } from '../utils/find-expansions'
-import { processInBatches } from '../utils/batch-processor'
+import { findExpansions } from '../../utils/regex'
+import { processInBatches } from '../../utils/async'
 import { log } from '../../utils/log'
 import {
     MODE_TO_OPEN_MARKER,

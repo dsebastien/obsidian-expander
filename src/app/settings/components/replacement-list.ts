@@ -1,6 +1,6 @@
 import { Setting } from 'obsidian'
 import type { Replacement } from '../../types/plugin-settings.intf'
-import { validateKey } from '../../utils/validate-key'
+import { validateKey } from '../../../utils/validation'
 import { isFunctionExpression, evaluateValue } from '../../services/function-evaluator'
 
 /**
