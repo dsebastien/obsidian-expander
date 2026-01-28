@@ -6,19 +6,19 @@ export type UpdateMode = 'auto' | 'manual' | 'once' | 'once-and-eject'
 /**
  * Opening markers by mode
  */
-export const EXPANDER_OPEN = '<!-- expander: '
-export const EXPANDER_MANUAL_OPEN = '<!-- expander-manual: '
-export const EXPANDER_ONCE_OPEN = '<!-- expander-once: '
-export const EXPANDER_ONCE_AND_EJECT_OPEN = '<!-- expander-once-and-eject: '
+export const EXPANDER_OPEN = '<!-- expand: '
+export const EXPANDER_MANUAL_OPEN = '<!-- expand-manual: '
+export const EXPANDER_ONCE_OPEN = '<!-- expand-once: '
+export const EXPANDER_ONCE_AND_EJECT_OPEN = '<!-- expand-once-and-eject: '
 export const EXPANDER_CLOSE = ' -->'
 
 /**
  * Closing markers by mode
  */
-export const EXPANDER_END = '<!-- /expander: '
-export const EXPANDER_MANUAL_END = '<!-- /expander-manual: '
-export const EXPANDER_ONCE_END = '<!-- /expander-once: '
-export const EXPANDER_ONCE_AND_EJECT_END = '<!-- /expander-once-and-eject: '
+export const EXPANDER_END = '<!-- /expand: '
+export const EXPANDER_MANUAL_END = '<!-- /expand-manual: '
+export const EXPANDER_ONCE_END = '<!-- /expand-once: '
+export const EXPANDER_ONCE_AND_EJECT_END = '<!-- /expand-once-and-eject: '
 export const EXPANDER_END_SUFFIX = ' -->'
 
 /**
@@ -45,10 +45,10 @@ export const NOTICE_TIMEOUT = 5000
  * Marker type to update mode mapping
  */
 export const MARKER_TO_MODE: Record<string, UpdateMode> = {
-    'expander': 'auto',
-    'expander-manual': 'manual',
-    'expander-once': 'once',
-    'expander-once-and-eject': 'once-and-eject'
+    'expand': 'auto',
+    'expand-manual': 'manual',
+    'expand-once': 'once',
+    'expand-once-and-eject': 'once-and-eject'
 }
 
 /**

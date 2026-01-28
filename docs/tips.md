@@ -7,7 +7,7 @@
 Keep version numbers synchronized across your vault:
 
 ```markdown
-Version: <!-- expander: version -->1.2.3<!-- /expander: version -->
+Version: <!-- expand: version -->1.2.3<!-- /expand: version -->
 ```
 
 ### Dates
@@ -15,7 +15,7 @@ Version: <!-- expander: version -->1.2.3<!-- /expander: version -->
 Insert today's date:
 
 ```markdown
-Date: <!-- expander: today --><!-- /expander: today -->
+Date: <!-- expand: today --><!-- /expand: today -->
 ```
 
 With value: `now().format("YYYY-MM-DD")`
@@ -25,12 +25,12 @@ With value: `now().format("YYYY-MM-DD")`
 Standard email signature:
 
 ```markdown
-<!-- expander: signature -->
+<!-- expand: signature -->
 
 Best regards,
 Your Name
 
-<!-- /expander: signature -->
+<!-- /expand: signature -->
 ```
 
 ### Template Fields
@@ -38,7 +38,7 @@ Your Name
 Use once-and-eject for template fields that should be filled once:
 
 ```markdown
-Created: <!-- expander-once-and-eject: creation-date --><!-- /expander-once-and-eject: creation-date -->
+Created: <!-- expand-once-and-eject: creation-date --><!-- /expand-once-and-eject: creation-date -->
 ```
 
 ## Best Practices
@@ -62,7 +62,7 @@ Group related keys with prefixes:
 For values that should be set once and never change:
 
 ```markdown
-Created: <!-- expander-once: created --><!-- /expander-once: created -->
+Created: <!-- expand-once: created --><!-- /expand-once: created -->
 ```
 
 ### Use Manual Mode for Controlled Updates
@@ -70,7 +70,7 @@ Created: <!-- expander-once: created --><!-- /expander-once: created -->
 For values you want to update explicitly:
 
 ```markdown
-Status: <!-- expander-manual: project-status -->In Progress<!-- /expander-manual: project-status -->
+Status: <!-- expand-manual: project-status -->In Progress<!-- /expand-manual: project-status -->
 ```
 
 ### Test Function Expressions
@@ -99,6 +99,6 @@ If auto-mode values aren't updating:
 
 Ensure:
 
-1. Opening and closing markers use the same mode (expander vs expander-manual)
+1. Opening and closing markers use the same mode (expand vs expand-manual)
 2. Keys match exactly in opening and closing markers
 3. No typos in the marker syntax

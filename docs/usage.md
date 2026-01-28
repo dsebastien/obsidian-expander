@@ -5,12 +5,12 @@
 Expander uses HTML comments as markers to identify where to insert values. The basic syntax is:
 
 ```markdown
-<!-- expander: key -->value<!-- /expander: key -->
+<!-- expand: key -->value<!-- /expand: key -->
 ```
 
-- **Opening marker**: `<!-- expander: key -->` or variant
+- **Opening marker**: `<!-- expand: key -->` or variant
 - **Value**: The content between markers (can be multi-line)
-- **Closing marker**: `<!-- /expander: key -->`
+- **Closing marker**: `<!-- /expand: key -->`
 
 The key in the closing marker must match the opening marker.
 
@@ -21,7 +21,7 @@ Expander supports four update modes, each with a different marker prefix:
 ### Auto Mode (default)
 
 ```markdown
-<!-- expander: my-key -->current value<!-- /expander: my-key -->
+<!-- expand: my-key -->current value<!-- /expand: my-key -->
 ```
 
 - Updates automatically when the file is modified
@@ -30,7 +30,7 @@ Expander supports four update modes, each with a different marker prefix:
 ### Manual Mode
 
 ```markdown
-<!-- expander-manual: my-key -->current value<!-- /expander-manual: my-key -->
+<!-- expand-manual: my-key -->current value<!-- /expand-manual: my-key -->
 ```
 
 - Only updates via command or the refresh button
@@ -39,7 +39,7 @@ Expander supports four update modes, each with a different marker prefix:
 ### Once Mode
 
 ```markdown
-<!-- expander-once: my-key --><!-- /expander-once: my-key -->
+<!-- expand-once: my-key --><!-- /expand-once: my-key -->
 ```
 
 - Updates once when empty, then never again
@@ -48,7 +48,7 @@ Expander supports four update modes, each with a different marker prefix:
 ### Once-and-Eject Mode
 
 ```markdown
-<!-- expander-once-and-eject: my-key --><!-- /expander-once-and-eject: my-key -->
+<!-- expand-once-and-eject: my-key --><!-- /expand-once-and-eject: my-key -->
 ```
 
 - Updates once, then removes the markers, leaving only the value
@@ -59,13 +59,13 @@ Expander supports four update modes, each with a different marker prefix:
 Values can span multiple lines:
 
 ```markdown
-<!-- expander: signature -->
+<!-- expand: signature -->
 
 Best regards,
 John Doe
 john@example.com
 
-<!-- /expander: signature -->
+<!-- /expand: signature -->
 ```
 
 ## Commands

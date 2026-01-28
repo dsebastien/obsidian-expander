@@ -16,7 +16,7 @@ Replace variables across your vault using HTML comment markers. Configure key-va
 1. Install the plugin
 2. Open Settings → Expander
 3. Add a replacement (e.g., key: `today`, value: `now().format("YYYY-MM-DD")`)
-4. In your note, add: `<!-- expander: today --><!-- /expander: today -->`
+4. In your note, add: `<!-- expand: today --><!-- /expand: today -->`
 5. The value will be automatically inserted between the markers
 
 ## About

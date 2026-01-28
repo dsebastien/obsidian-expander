@@ -17,9 +17,9 @@ export interface ExpanderMatch {
     fullMatch: string
     /** The update mode for this expander */
     updateMode: UpdateMode
-    /** The actual opening marker used (e.g., "<!-- expander: key -->") */
+    /** The actual opening marker used (e.g., "<!-- expand: key -->") */
     openMarker: string
-    /** The actual closing marker used (e.g., "<!-- /expander: key -->") */
+    /** The actual closing marker used (e.g., "<!-- /expand: key -->") */
     closeMarker: string
 }
 
