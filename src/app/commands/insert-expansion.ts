@@ -1,12 +1,7 @@
 import { Editor, FuzzySuggestModal, Notice } from 'obsidian'
 import type { ExpanderPlugin } from '../plugin'
 import type { UpdateMode } from '../constants'
-import {
-    MODE_TO_OPEN_MARKER,
-    MODE_TO_END_MARKER,
-    EXPANDER_CLOSE,
-    EXPANDER_END_SUFFIX
-} from '../constants'
+import { MODE_TO_OPEN_MARKER, EXPANDER_CLOSE } from '../constants'
 import { log } from '../../utils/log'
 
 interface ExpansionOption {
@@ -119,20 +114,18 @@ function insertExpansion(plugin: ExpanderPlugin, editor: Editor): void {
 }
 
 /**
- * Actually insert the markers at cursor position
+ * Actually insert the opening marker at cursor position
+ * The closing tag and value will be added automatically during expansion
  */
 function doInsert(editor: Editor, key: string, mode: UpdateMode): void {
     log(`Inserting expansion: ${key} with mode ${mode}`, 'debug')
 
     const openMarker = MODE_TO_OPEN_MARKER[mode] + key + EXPANDER_CLOSE
-    const closeMarker = MODE_TO_END_MARKER[mode] + key + EXPANDER_END_SUFFIX
 
     const cursor = editor.getCursor()
-    const insertText = openMarker + closeMarker
+    editor.replaceRange(openMarker, cursor)
 
-    editor.replaceRange(insertText, cursor)
-
-    // Position cursor between markers
+    // Position cursor after marker
     const newCursorPos = {
         line: cursor.line,
         ch: cursor.ch + openMarker.length

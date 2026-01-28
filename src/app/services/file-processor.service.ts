@@ -2,15 +2,10 @@ import type { App, TFile } from 'obsidian'
 import type { PluginSettings } from '../types/plugin-settings.intf'
 import type { ExpanderMatch, ProcessingResult, ReplacementResult } from '../types/expander.types'
 import type { ExpanderService } from './expander.service'
-import { findExpansions } from '../../utils/regex'
+import { findExpansions, findIncompleteExpansions } from '../../utils/regex'
 import { processInBatches } from '../../utils/async'
 import { log } from '../../utils/log'
-import {
-    MODE_TO_OPEN_MARKER,
-    MODE_TO_END_MARKER,
-    EXPANDER_CLOSE,
-    EXPANDER_END_SUFFIX
-} from '../constants'
+import { MODE_TO_OPEN_MARKER, MODE_TO_END_MARKER, EXPANDER_CLOSE } from '../constants'
 import type { UpdateMode } from '../constants'
 
 /**
@@ -143,11 +138,21 @@ export class FileProcessorService {
      * @returns New content if changed, null otherwise
      */
     replaceExpansions(content: string, mode: 'auto' | 'all' = 'all'): ReplacementResult {
-        const matches = findExpansions(content)
         const unknownKeys: string[] = []
         let newContent = content
         let replacementsCount = 0
         let hasChanges = false
+
+        // First, complete any incomplete expansions (opening tag without closing tag)
+        const incompleteResult = this.completeIncompleteExpansions(newContent, mode, unknownKeys)
+        if (incompleteResult.changed) {
+            newContent = incompleteResult.content
+            replacementsCount += incompleteResult.count
+            hasChanges = true
+        }
+
+        // Now process complete expansions
+        const matches = findExpansions(newContent)
 
         // Process matches from end to start to maintain correct offsets
         const sortedMatches = [...matches].sort((a, b) => b.startOffset - a.startOffset)
@@ -204,11 +209,74 @@ export class FileProcessorService {
     }
 
     /**
+     * Complete incomplete expansions by adding closing tag and value
+     */
+    private completeIncompleteExpansions(
+        content: string,
+        mode: 'auto' | 'all',
+        unknownKeys: string[]
+    ): { content: string; changed: boolean; count: number } {
+        const incomplete = findIncompleteExpansions(content)
+
+        if (incomplete.length === 0) {
+            return { content, changed: false, count: 0 }
+        }
+
+        let newContent = content
+        let count = 0
+
+        // Process from end to start to maintain correct offsets
+        const sorted = [...incomplete].sort((a, b) => b.startOffset - a.startOffset)
+
+        for (const inc of sorted) {
+            // Skip non-auto modes if we're in auto mode
+            if (mode === 'auto' && inc.updateMode !== 'auto') {
+                continue
+            }
+
+            const newValue = this.expanderService.getReplacementValue(inc.key)
+
+            if (newValue === null) {
+                if (!unknownKeys.includes(inc.key)) {
+                    unknownKeys.push(inc.key)
+                }
+                // Still add the closing tag, but with empty value
+                const closeMarker = this.buildCloseMarker()
+                newContent =
+                    newContent.substring(0, inc.endOffset) +
+                    closeMarker +
+                    newContent.substring(inc.endOffset)
+                count++
+                continue
+            }
+
+            // For once-and-eject, replace opening tag with just the value
+            if (inc.updateMode === 'once-and-eject') {
+                newContent =
+                    newContent.substring(0, inc.startOffset) +
+                    newValue +
+                    newContent.substring(inc.endOffset)
+            } else {
+                // Add value and closing tag after opening tag
+                const closeMarker = this.buildCloseMarker()
+                newContent =
+                    newContent.substring(0, inc.endOffset) +
+                    newValue +
+                    closeMarker +
+                    newContent.substring(inc.endOffset)
+            }
+            count++
+        }
+
+        return { content: newContent, changed: count > 0, count }
+    }
+
+    /**
      * Replace a single match with a new value (preserving markers)
      */
     private replaceMatch(content: string, match: ExpanderMatch, newValue: string): string {
         const openMarker = this.buildOpenMarker(match.updateMode, match.key)
-        const closeMarker = this.buildCloseMarker(match.updateMode, match.key)
+        const closeMarker = this.buildCloseMarker()
 
         const newMatch = openMarker + newValue + closeMarker
 
@@ -225,9 +293,9 @@ export class FileProcessorService {
     }
 
     /**
-     * Build closing marker for a given mode and key
+     * Build closing marker (universal for all modes)
      */
-    private buildCloseMarker(mode: UpdateMode, key: string): string {
-        return MODE_TO_END_MARKER[mode] + key + EXPANDER_END_SUFFIX
+    private buildCloseMarker(): string {
+        return MODE_TO_END_MARKER['auto']
     }
 }

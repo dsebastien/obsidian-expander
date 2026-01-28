@@ -7,7 +7,7 @@
 Keep version numbers synchronized across your vault:
 
 ```markdown
-Version: <!-- expand: version -->1.2.3<!-- /expand: version -->
+Version: <!-- expand: version -->1.2.3<!---->
 ```
 
 ### Dates
@@ -15,7 +15,7 @@ Version: <!-- expand: version -->1.2.3<!-- /expand: version -->
 Insert today's date:
 
 ```markdown
-Date: <!-- expand: today --><!-- /expand: today -->
+Date: <!-- expand: today --><!---->
 ```
 
 With value: `now().format("YYYY-MM-DD")`
@@ -30,7 +30,7 @@ Standard email signature:
 Best regards,
 Your Name
 
-<!-- /expand: signature -->
+<!---->
 ```
 
 ### Template Fields
@@ -38,7 +38,7 @@ Your Name
 Use once-and-eject for template fields that should be filled once:
 
 ```markdown
-Created: <!-- expand-once-and-eject: creation-date --><!-- /expand-once-and-eject: creation-date -->
+Created: <!-- expand-once-and-eject: creation-date --><!---->
 ```
 
 ## Best Practices
@@ -62,7 +62,7 @@ Group related keys with prefixes:
 For values that should be set once and never change:
 
 ```markdown
-Created: <!-- expand-once: created --><!-- /expand-once: created -->
+Created: <!-- expand-once: created --><!---->
 ```
 
 ### Use Manual Mode for Controlled Updates
@@ -70,7 +70,7 @@ Created: <!-- expand-once: created --><!-- /expand-once: created -->
 For values you want to update explicitly:
 
 ```markdown
-Status: <!-- expand-manual: project-status -->In Progress<!-- /expand-manual: project-status -->
+Status: <!-- expand-manual: project-status -->In Progress<!---->
 ```
 
 ### Test Function Expressions

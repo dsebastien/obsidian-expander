@@ -51,39 +51,57 @@ today().format("MM/DD/YYYY")
 
 ## String Functions
 
-These functions can be chained after date functions (after `format()`) or used to transform static values.
+String functions take a text argument and can be chained.
 
-### lower()
+### upper(text)
+
+Converts string to uppercase.
+
+```
+upper("hello")
+```
+
+Result: `HELLO`
+
+### lower(text)
 
 Converts string to lowercase.
 
 ```
-now().format("MMMM").lower()
+lower("HELLO")
 ```
 
-### upper()
+Result: `hello`
 
-Converts string to uppercase.
+### trim(text)
+
+Removes leading and trailing whitespace.
+
+```
+trim("  hello  ")
+```
+
+Result: `hello`
+
+### replace(text, pattern, replacement)
+
+Replaces all occurrences of a pattern with a replacement string.
+
+```
+replace("hello world", "world", "there")
+```
+
+Result: `hello there`
+
+### Chaining with dates
+
+String functions can be chained after date functions:
 
 ```
 now().format("MMMM").upper()
 ```
 
-### trim()
-
-Removes leading and trailing whitespace.
-
-```
-trim()
-```
-
-### replace(pattern, replacement)
-
-Replaces all occurrences of a pattern with a replacement string.
-
-```
-replace("-", "/")
-```
+Result: `JANUARY`
 
 ## Examples
 
@@ -118,3 +136,19 @@ today().format("YYYY-MM-DD HH:mm:ss")
 ```
 
 Result: `2024-01-15 00:00:00`
+
+**Uppercase text**:
+
+```
+upper("hello world")
+```
+
+Result: `HELLO WORLD`
+
+**Chained string operations**:
+
+```
+upper("hello").replace("L", "X")
+```
+
+Result: `HEXXO`

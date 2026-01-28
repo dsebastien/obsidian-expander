@@ -5,10 +5,11 @@
  * Examples:
  * - "now().format('YYYY-MM-DD')"
  * - "today().format('MM/DD/YYYY')"
- * - "lower()"
- * - "upper()"
- * - "trim()"
- * - "replace('old', 'new')"
+ * - "upper('hello')" → "HELLO"
+ * - "lower('HELLO')" → "hello"
+ * - "trim('  hello  ')" → "hello"
+ * - "replace('hello world', 'world', 'there')" → "hello there"
+ * - Chaining: "upper('hello').replace('L', 'X')" → "HEXXO"
  */
 
 import { log } from '../../utils/log'
@@ -200,6 +201,7 @@ function evaluateFunctionCalls(calls: FunctionCall[]): EvaluationResult {
     }
 
     let result: EvaluationResult
+    let startIndex = 1 // Start processing chain from index 1 by default
 
     // Initial function call
     switch (firstCall.name) {
@@ -209,17 +211,33 @@ function evaluateFunctionCalls(calls: FunctionCall[]): EvaluationResult {
         case 'today':
             result = createToday()
             break
+        case 'upper':
+            // upper('text') - use first arg as input
+            result = createString(firstCall.args[0] ?? '').upper()
+            break
+        case 'lower':
+            // lower('text') - use first arg as input
+            result = createString(firstCall.args[0] ?? '').lower()
+            break
+        case 'trim':
+            // trim('text') - use first arg as input
+            result = createString(firstCall.args[0] ?? '').trim()
+            break
+        case 'replace':
+            // replace('text', 'pattern', 'replacement') - use first arg as input
+            result = createString(firstCall.args[0] ?? '').replace(
+                firstCall.args[1] ?? '',
+                firstCall.args[2] ?? ''
+            )
+            break
         default:
-            // Start with empty string for string functions
+            // Unknown function, start with empty string
             result = createString('')
+            startIndex = 0
     }
 
-    // Process chain
-    for (
-        let i = firstCall.name === 'now' || firstCall.name === 'today' ? 1 : 0;
-        i < calls.length;
-        i++
-    ) {
+    // Process chain (remaining calls)
+    for (let i = startIndex; i < calls.length; i++) {
         const call = calls[i]
         if (!call) continue
 

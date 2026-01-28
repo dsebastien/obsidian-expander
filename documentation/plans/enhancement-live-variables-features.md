@@ -35,7 +35,7 @@ version: 1.0.0
 ```
 
 ```markdown
-<!-- expand: project-name -->fm("project")<!-- /expand: project-name -->
+<!-- expand: project-name -->fm("project")<!---->
 ```
 
 ### 2. Cross-Note Variable References (High Value)
@@ -52,11 +52,11 @@ note("path/to/note.md", "key")  → Get expansion value from another note
 
 ```markdown
 <!-- In config.md -->
-<!-- expand: company-name -->Acme Corp<!-- /expand: company-name -->
+<!-- expand: company-name -->Acme Corp<!---->
 
 <!-- In any other note -->
 
-Company: <!-- expand: ref-company -->note("config.md", "company-name")<!-- /expand: ref-company -->
+Company: <!-- expand: ref-company -->note("config.md", "company-name")<!---->
 ```
 
 ### 3. File Metadata Functions (Medium Value)
@@ -73,7 +73,7 @@ modified()        → File modification date (returns DateValue)
 **Use Case**: Auto-insert file metadata:
 
 ```markdown
-Created: <!-- expand: created-date -->created().format("YYYY-MM-DD")<!-- /expand: created-date -->
+Created: <!-- expand: created-date -->created().format("YYYY-MM-DD")<!---->
 ```
 
 ### 4. Built-in Calculation Functions (Lower Priority)

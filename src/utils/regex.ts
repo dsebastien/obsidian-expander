@@ -1,21 +1,19 @@
 import type { UpdateMode } from '../app/constants'
-import type { ExpanderMatch } from '../app/types/expander.types'
+import type { ExpanderMatch, IncompleteExpansion } from '../app/types/expander.types'
 
 /**
  * Pre-compiled regex for matching all expander marker variants
- * Captures: opening marker type, key, value content, closing marker type, closing key
+ * Captures: opening marker type, key, value content
  *
  * Pattern breakdown:
  * - <!--\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\s* - Opening marker with variant
  * - ([a-z0-9]+(?:-[a-z0-9]+)*) - Key in kebab-case
  * - \s*--> - End of opening marker
  * - ([\s\S]*?) - Value content (non-greedy, including newlines)
- * - <!--\s*\/(expand(?:-(?:manual|once(?:-and-eject)?))?):\s* - Closing marker with variant
- * - ([a-z0-9]+(?:-[a-z0-9]+)*) - Closing key for validation
- * - \s*--> - End of closing marker
+ * - <!--\s*--> - Universal closing marker (empty comment)
  */
 const EXPANDER_REGEX =
-    /<!--\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\s*([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->([\s\S]*?)<!--\s*\/(expand(?:-(?:manual|once(?:-and-eject)?))?):\s*([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->/g
+    /<!--\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\s*([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->([\s\S]*?)<!--\s*-->/g
 
 /**
  * Map marker type string to UpdateMode
@@ -50,21 +48,9 @@ export function findExpansions(text: string): ExpanderMatch[] {
         const openMarkerType = match[1]
         const openKey = match[2]
         const value = match[3]
-        const closeMarkerType = match[4]
-        const closeKey = match[5]
 
         // Ensure all captures are present
-        if (!openMarkerType || !openKey || value === undefined || !closeMarkerType || !closeKey) {
-            continue
-        }
-
-        // Validate that opening and closing markers match
-        if (openMarkerType !== closeMarkerType) {
-            continue
-        }
-
-        // Validate that opening and closing keys match
-        if (openKey !== closeKey) {
+        if (!openMarkerType || !openKey || value === undefined) {
             continue
         }
 
@@ -81,11 +67,62 @@ export function findExpansions(text: string): ExpanderMatch[] {
             fullMatch,
             updateMode,
             openMarker: `<!-- ${openMarkerType}: ${openKey} -->`,
-            closeMarker: `<!-- /${closeMarkerType}: ${closeKey} -->`
+            closeMarker: '<!---->'
         })
     }
 
     return matches
+}
+
+/**
+ * Regex for matching opening markers only (without closing tag)
+ */
+const OPENING_MARKER_REGEX =
+    /<!--\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\s*([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->/g
+
+/**
+ * Find incomplete expansions (opening tags without closing tags)
+ * These need to have a closing tag added during processing
+ */
+export function findIncompleteExpansions(text: string): IncompleteExpansion[] {
+    // First, find all complete expansions to know which opening tags are already paired
+    const completeMatches = findExpansions(text)
+    const pairedOffsets = new Set(completeMatches.map((m) => m.startOffset))
+
+    const incomplete: IncompleteExpansion[] = []
+
+    // Reset regex state
+    OPENING_MARKER_REGEX.lastIndex = 0
+
+    let match: RegExpExecArray | null
+    while ((match = OPENING_MARKER_REGEX.exec(text)) !== null) {
+        const startOffset = match.index
+
+        // Skip if this opening tag is part of a complete expansion
+        if (pairedOffsets.has(startOffset)) {
+            continue
+        }
+
+        const markerType = match[1]
+        const key = match[2]
+
+        if (!markerType || !key) {
+            continue
+        }
+
+        const fullMatch = match[0]
+        const endOffset = startOffset + fullMatch.length
+
+        incomplete.push({
+            key,
+            startOffset,
+            endOffset,
+            openMarker: fullMatch,
+            updateMode: markerToMode(markerType)
+        })
+    }
+
+    return incomplete
 }
 
 /**
@@ -100,8 +137,5 @@ export function escapeRegExp(str: string): string {
  */
 export function buildMarkerRegex(markerType: string, key: string): RegExp {
     const escapedKey = escapeRegExp(key)
-    return new RegExp(
-        `<!--\\s*${markerType}:\\s*${escapedKey}\\s*-->([\\s\\S]*?)<!--\\s*\\/${markerType}:\\s*${escapedKey}\\s*-->`,
-        'g'
-    )
+    return new RegExp(`<!--\\s*${markerType}:\\s*${escapedKey}\\s*-->([\\s\\S]*?)<!--\\s*-->`, 'g')
 }

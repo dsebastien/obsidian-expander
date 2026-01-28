@@ -13,13 +13,9 @@ export const EXPANDER_ONCE_AND_EJECT_OPEN = '<!-- expand-once-and-eject: '
 export const EXPANDER_CLOSE = ' -->'
 
 /**
- * Closing markers by mode
+ * Universal closing marker (same for all modes)
  */
-export const EXPANDER_END = '<!-- /expand: '
-export const EXPANDER_MANUAL_END = '<!-- /expand-manual: '
-export const EXPANDER_ONCE_END = '<!-- /expand-once: '
-export const EXPANDER_ONCE_AND_EJECT_END = '<!-- /expand-once-and-eject: '
-export const EXPANDER_END_SUFFIX = ' -->'
+export const EXPANDER_END = '<!---->'
 
 /**
  * Key format pattern - kebab-case only (lowercase letters, numbers, hyphens)
@@ -62,11 +58,11 @@ export const MODE_TO_OPEN_MARKER: Record<UpdateMode, string> = {
 }
 
 /**
- * Update mode to closing marker prefix mapping
+ * Update mode to closing marker mapping (same for all modes)
  */
 export const MODE_TO_END_MARKER: Record<UpdateMode, string> = {
     'auto': EXPANDER_END,
-    'manual': EXPANDER_MANUAL_END,
-    'once': EXPANDER_ONCE_END,
-    'once-and-eject': EXPANDER_ONCE_AND_EJECT_END
+    'manual': EXPANDER_END,
+    'once': EXPANDER_END,
+    'once-and-eject': EXPANDER_END
 }

@@ -19,8 +19,24 @@ export interface ExpanderMatch {
     updateMode: UpdateMode
     /** The actual opening marker used (e.g., "<!-- expand: key -->") */
     openMarker: string
-    /** The actual closing marker used (e.g., "<!-- /expand: key -->") */
+    /** The actual closing marker used (always "<!---->") */
     closeMarker: string
+}
+
+/**
+ * Represents an incomplete expansion (opening tag without closing tag)
+ */
+export interface IncompleteExpansion {
+    /** The key used in the expander marker */
+    key: string
+    /** Character offset where the opening marker starts */
+    startOffset: number
+    /** Character offset where the opening marker ends */
+    endOffset: number
+    /** The complete opening marker string */
+    openMarker: string
+    /** The update mode for this expander */
+    updateMode: UpdateMode
 }
 
 /**

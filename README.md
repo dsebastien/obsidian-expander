@@ -22,22 +22,30 @@ Replace variables across your Obsidian vault using HTML comment markers. Configu
 3. Add a replacement (e.g., key: `today`, value: `now().format("YYYY-MM-DD")`)
 4. In your note, add:
     ```markdown
-    <!-- expand: today --><!-- /expand: today -->
+    <!-- expand: today -->
     ```
-5. The value will be automatically inserted between the markers
+5. The value and closing tag will be automatically inserted
 
 ## Syntax
 
+Just add an opening tag - the closing tag is added automatically:
+
 ```markdown
-<!-- expand: key -->value<!-- /expand: key -->
+<!-- expand: key -->
+```
+
+After expansion:
+
+```markdown
+<!-- expand: key -->value<!---->
 ```
 
 Update mode variants:
 
-- `<!-- expand: key -->` - Auto mode
-- `<!-- expand-manual: key -->` - Manual mode
-- `<!-- expand-once: key -->` - Once mode
-- `<!-- expand-once-and-eject: key -->` - Once-and-eject mode
+- `<!-- expand: key -->` - Auto mode (updates on file change)
+- `<!-- expand-manual: key -->` - Manual mode (update via command only)
+- `<!-- expand-once: key -->` - Once mode (fills once, never updates)
+- `<!-- expand-once-and-eject: key -->` - Once-and-eject mode (fills once, removes markers)
 
 ## Functions
 
