@@ -117,14 +117,8 @@ export class ExpanderPlugin extends Plugin {
      * Handle file modification - process auto-mode expansions
      */
     private async handleFileModify(file: TFile): Promise<void> {
-        log(`File modified: ${file.path}`, 'debug')
-
         try {
             const result = await this.fileProcessor.processFile(file, 'auto')
-
-            if (result.replacementsCount > 0) {
-                log(`Replaced ${result.replacementsCount} expansion(s) in ${file.path}`, 'debug')
-            }
 
             if (result.unknownKeys.length > 0) {
                 log(`Unknown keys in ${file.path}: ${result.unknownKeys.join(', ')}`, 'warn')
