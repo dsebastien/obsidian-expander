@@ -85,11 +85,6 @@
     border-color: var(--background-modifier-border);
 }
 
-.exp-folder-textarea {
-    @apply min-h-[60px] w-full;
-    resize: vertical;
-}
-
 /* ========================================
    EXPANDER EDITOR DECORATIONS
    ======================================== */

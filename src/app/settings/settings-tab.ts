@@ -1,6 +1,7 @@
-import { App, PluginSettingTab, Setting } from 'obsidian'
+import { App, PluginSettingTab, SearchComponent, Setting } from 'obsidian'
 import type { ExpanderPlugin } from '../plugin'
 import { renderReplacementList } from './components/replacement-list'
+import { FolderSuggest } from '../utils/folder-suggest'
 
 /**
  * Settings tab for the Expander plugin
@@ -56,43 +57,74 @@ export class ExpanderSettingTab extends PluginSettingTab {
     private renderFolderSettings(containerEl: HTMLElement): void {
         new Setting(containerEl).setName('Folder settings').setHeading()
 
-        new Setting(containerEl)
-            .setName('Folders to scan')
-            .setDesc(
-                'Comma-separated list of folders to scan for expansions. Leave empty to scan all folders.'
-            )
-            .addTextArea((text) => {
-                text.setPlaceholder('folder1, folder2/subfolder')
-                    .setValue(this.plugin.settings.foldersToScan.join(', '))
-                    .onChange((value) => {
-                        const folders = value
-                            .split(',')
-                            .map((f) => f.trim())
-                            .filter((f) => f.length > 0)
-                        this.plugin.updateSettings((draft) => {
-                            draft.foldersToScan = folders
-                        })
-                    })
-                text.inputEl.classList.add('exp-folder-textarea')
-            })
+        this.renderFolderList({
+            containerEl,
+            name: 'Folders to scan',
+            description: 'Folders to scan for expansions. Leave empty to scan all folders.',
+            currentList: this.plugin.settings.foldersToScan,
+            setValue: (folders) => {
+                this.plugin.updateSettings((draft) => {
+                    draft.foldersToScan = folders
+                })
+            }
+        })
+
+        this.renderFolderList({
+            containerEl,
+            name: 'Folders to ignore',
+            description: 'Folders to ignore during scanning.',
+            currentList: this.plugin.settings.ignoredFolders,
+            setValue: (folders) => {
+                this.plugin.updateSettings((draft) => {
+                    draft.ignoredFolders = folders
+                })
+            }
+        })
+    }
+
+    private renderFolderList(args: {
+        containerEl: HTMLElement
+        name: string
+        description: string
+        currentList: string[]
+        setValue: (folders: string[]) => void
+    }): void {
+        const { containerEl, name, description, currentList, setValue } = args
+        let searchInput: SearchComponent | undefined
 
         new Setting(containerEl)
-            .setName('Folders to ignore')
-            .setDesc('Comma-separated list of folders to ignore during scanning.')
-            .addTextArea((text) => {
-                text.setPlaceholder('templates, archive')
-                    .setValue(this.plugin.settings.ignoredFolders.join(', '))
-                    .onChange((value) => {
-                        const folders = value
-                            .split(',')
-                            .map((f) => f.trim())
-                            .filter((f) => f.length > 0)
-                        this.plugin.updateSettings((draft) => {
-                            draft.ignoredFolders = folders
-                        })
-                    })
-                text.inputEl.classList.add('exp-folder-textarea')
+            .setName(name)
+            .setDesc(description)
+            .addSearch((cb) => {
+                searchInput = cb
+                new FolderSuggest(cb.inputEl, this.app)
+                cb.setPlaceholder('Example: folder1/folder2')
             })
+            .addButton((cb) => {
+                cb.setIcon('plus')
+                cb.setTooltip('Add folder')
+                cb.onClick(() => {
+                    if (!searchInput) {
+                        return
+                    }
+                    const newFolder = searchInput.getValue().trim()
+                    if (!newFolder || currentList.includes(newFolder)) {
+                        return
+                    }
+                    setValue([...currentList, newFolder])
+                    searchInput.setValue('')
+                    this.display()
+                })
+            })
+
+        currentList.forEach((folder) =>
+            new Setting(containerEl).setName(folder).addButton((button) =>
+                button.setButtonText('Remove').onClick(() => {
+                    setValue(currentList.filter((f) => f !== folder))
+                    this.display()
+                })
+            )
+        )
     }
 
     private renderBehaviorSettings(containerEl: HTMLElement): void {
