@@ -1,6 +1,7 @@
 import type { App, TFile } from 'obsidian'
 import type { PluginSettings } from '../types/plugin-settings.intf'
 import type { ExpanderMatch, ProcessingResult, ReplacementResult } from '../types/expander.types'
+import type { EvaluationContext } from '../types/evaluation-context'
 import type { ExpanderService } from './expander.service'
 import { findExpansions, findIncompleteExpansions } from '../../utils/regex'
 import { processInBatches } from '../../utils/async'
@@ -31,7 +32,7 @@ export class FileProcessorService {
 
         try {
             const content = await this.app.vault.read(file)
-            const replacementResult = this.replaceExpansions(content, mode)
+            const replacementResult = this.replaceExpansions(content, mode, file)
 
             if (replacementResult.newContent !== null) {
                 await this.app.vault.modify(file, replacementResult.newContent)
@@ -73,7 +74,9 @@ export class FileProcessorService {
                 return false
             }
 
-            const newValue = this.expanderService.getReplacementValue(key)
+            // Create evaluation context for file.* fields
+            const context: EvaluationContext = { file }
+            const newValue = this.expanderService.getReplacementValue(key, context)
             if (newValue === null) {
                 return false
             }
@@ -135,16 +138,29 @@ export class FileProcessorService {
      * Replace expansions in content
      * @param content - The file content
      * @param mode - 'auto' for automatic updates only, 'all' for all update modes
+     * @param file - Optional file for context (enables file.* fields)
      * @returns New content if changed, null otherwise
      */
-    replaceExpansions(content: string, mode: 'auto' | 'all' = 'all'): ReplacementResult {
+    replaceExpansions(
+        content: string,
+        mode: 'auto' | 'all' = 'all',
+        file?: TFile
+    ): ReplacementResult {
         const unknownKeys: string[] = []
         let newContent = content
         let replacementsCount = 0
         let hasChanges = false
 
+        // Create evaluation context if file is provided
+        const context: EvaluationContext | undefined = file ? { file } : undefined
+
         // First, complete any incomplete expansions (opening tag without closing tag)
-        const incompleteResult = this.completeIncompleteExpansions(newContent, mode, unknownKeys)
+        const incompleteResult = this.completeIncompleteExpansions(
+            newContent,
+            mode,
+            unknownKeys,
+            context
+        )
         if (incompleteResult.changed) {
             newContent = incompleteResult.content
             replacementsCount += incompleteResult.count
@@ -171,7 +187,7 @@ export class FileProcessorService {
                 continue
             }
 
-            const newValue = this.expanderService.getReplacementValue(match.key)
+            const newValue = this.expanderService.getReplacementValue(match.key, context)
 
             if (newValue === null) {
                 if (!unknownKeys.includes(match.key)) {
@@ -214,7 +230,8 @@ export class FileProcessorService {
     private completeIncompleteExpansions(
         content: string,
         mode: 'auto' | 'all',
-        unknownKeys: string[]
+        unknownKeys: string[],
+        context?: EvaluationContext
     ): { content: string; changed: boolean; count: number } {
         const incomplete = findIncompleteExpansions(content)
 
@@ -234,7 +251,7 @@ export class FileProcessorService {
                 continue
             }
 
-            const newValue = this.expanderService.getReplacementValue(inc.key)
+            const newValue = this.expanderService.getReplacementValue(inc.key, context)
 
             if (newValue === null) {
                 if (!unknownKeys.includes(inc.key)) {

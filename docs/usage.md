@@ -101,11 +101,12 @@ Replacement values can use function expressions for dynamic content. See [Functi
 
 ### Date Functions
 
-| Function             | Description           |
-| -------------------- | --------------------- |
-| `now()`              | Current date and time |
-| `today()`            | Today at midnight     |
-| `.format("pattern")` | Format a date         |
+| Function             | Description            |
+| -------------------- | ---------------------- |
+| `now()`              | Current date and time  |
+| `today()`            | Today at midnight      |
+| `date("string")`     | Parse date from string |
+| `.format("pattern")` | Format a date          |
 
 **Format patterns**: `YYYY` (year), `MM` (month), `DD` (day), `HH` (hour 24h), `mm` (minute), `ss` (second)
 
@@ -116,6 +117,8 @@ now().format("YYYY-MM-DD")           → 2024-01-15
 now().format("HH:mm")                → 14:30
 today().format("MM/DD/YYYY")         → 01/15/2024
 now().format("YYYY-MM-DD HH:mm:ss")  → 2024-01-15 14:30:45
+date("2024-01-15").format("YYYY")    → 2024
+date(file.name).format("DD/MM/YYYY") → 15/01/2024
 ```
 
 ### String Functions
@@ -146,6 +149,28 @@ upper("hello").replace("L", "X")              → HEXXO
 now().format("MMMM").lower()                  → january
 ```
 
+### File Fields
+
+Access current file metadata with `file.*`:
+
+| Field         | Description              |
+| ------------- | ------------------------ |
+| `file.name`   | File name (no extension) |
+| `file.path`   | Full path                |
+| `file.folder` | Parent folder            |
+| `file.ext`    | Extension                |
+| `file.ctime`  | Creation date            |
+| `file.mtime`  | Modified date            |
+
+**Examples**:
+
+```
+file.name                        → My Note
+file.ctime.format("YYYY-MM-DD")  → 2024-01-15
+file.name.upper()                → MY NOTE
+upper(file.name)                 → MY NOTE
+```
+
 ### Practical Examples
 
 **Date stamp for notes**:
@@ -158,12 +183,22 @@ now().format("MMMM").lower()                  → january
 - Key: `timestamp`
 - Value: `now().format("YYYY-MM-DD HH:mm")`
 
-**Uppercase project name**:
+**File name in uppercase**:
 
-- Key: `project`
-- Value: `upper("my project")`
+- Key: `title`
+- Value: `file.name.upper()`
 
-**Formatted path**:
+**File creation date**:
 
-- Key: `path`
-- Value: `replace("folder/subfolder/file", "/", " > ")`
+- Key: `created`
+- Value: `file.ctime.format("YYYY-MM-DD")`
+
+**Breadcrumb path**:
+
+- Key: `breadcrumb`
+- Value: `file.path.replace("/", " > ")`
+
+**Year from file name** (for dated notes like "2024-01-15 Meeting"):
+
+- Key: `year`
+- Value: `date(file.name).format("YYYY")`

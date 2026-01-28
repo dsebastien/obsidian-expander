@@ -1,4 +1,4 @@
-import { format as dateFnsFormat, startOfDay } from 'date-fns'
+import { format as dateFnsFormat, startOfDay, parseISO } from 'date-fns'
 
 /**
  * Format token mapping from moment.js/custom tokens to date-fns tokens
@@ -119,4 +119,77 @@ export function createNow(): DateValue {
  */
 export function createToday(): DateValue {
     return new DateValue(today())
+}
+
+/**
+ * Create a DateValue from any Date object
+ */
+export function createDateValue(date: Date): DateValue {
+    return new DateValue(date)
+}
+
+/**
+ * Parse a date string and create a DateValue
+ * Supports ISO format (2024-01-15) and various common formats
+ * Also extracts dates from strings like "2024-01-15 Meeting Notes"
+ *
+ * @param dateString - String containing a date to parse
+ * @returns DateValue if parsing succeeds, null if parsing fails
+ */
+export function createDateFromString(dateString: string): DateValue | null {
+    if (!dateString || dateString.trim() === '') {
+        return null
+    }
+
+    const trimmed = dateString.trim()
+
+    // Try to extract a date pattern from the string (YYYY-MM-DD format)
+    const isoMatch = trimmed.match(/(\d{4})-(\d{2})-(\d{2})/)
+    if (isoMatch) {
+        const [, yearStr, monthStr, dayStr] = isoMatch
+        if (yearStr && monthStr && dayStr) {
+            const parsed = parseISO(`${yearStr}-${monthStr}-${dayStr}`)
+            if (!isNaN(parsed.getTime())) {
+                return new DateValue(parsed)
+            }
+        }
+    }
+
+    // Try YYYY/MM/DD format
+    const slashMatch = trimmed.match(/(\d{4})\/(\d{2})\/(\d{2})/)
+    if (slashMatch) {
+        const [, yearStr, monthStr, dayStr] = slashMatch
+        if (yearStr && monthStr && dayStr) {
+            const parsed = parseISO(`${yearStr}-${monthStr}-${dayStr}`)
+            if (!isNaN(parsed.getTime())) {
+                return new DateValue(parsed)
+            }
+        }
+    }
+
+    // Try YYYYMMDD format (no separators)
+    const compactMatch = trimmed.match(/^(\d{4})(\d{2})(\d{2})/)
+    if (compactMatch) {
+        const [, yearStr, monthStr, dayStr] = compactMatch
+        if (yearStr && monthStr && dayStr) {
+            const parsed = parseISO(`${yearStr}-${monthStr}-${dayStr}`)
+            if (!isNaN(parsed.getTime())) {
+                return new DateValue(parsed)
+            }
+        }
+    }
+
+    // Try direct ISO parsing as fallback
+    const directParse = parseISO(trimmed)
+    if (!isNaN(directParse.getTime())) {
+        return new DateValue(directParse)
+    }
+
+    // Try native Date parsing as last resort
+    const nativeParse = new Date(trimmed)
+    if (!isNaN(nativeParse.getTime())) {
+        return new DateValue(nativeParse)
+    }
+
+    return null
 }

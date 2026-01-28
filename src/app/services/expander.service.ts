@@ -1,4 +1,5 @@
 import type { PluginSettings, Replacement } from '../types/plugin-settings.intf'
+import type { EvaluationContext } from '../types/evaluation-context'
 import { evaluateValue } from './function-evaluator'
 
 /**
@@ -10,8 +11,11 @@ export class ExpanderService {
     /**
      * Get the computed value for a key
      * Returns null if key doesn't exist or is disabled
+     *
+     * @param key - The replacement key
+     * @param context - Optional evaluation context with file information for file.* fields
      */
-    getReplacementValue(key: string): string | null {
+    getReplacementValue(key: string, context?: EvaluationContext): string | null {
         const settings = this.getSettings()
         const replacement = settings.replacements.find((r) => r.key === key && r.enabled)
 
@@ -19,7 +23,7 @@ export class ExpanderService {
             return null
         }
 
-        return evaluateValue(replacement.value)
+        return evaluateValue(replacement.value, context)
     }
 
     /**
