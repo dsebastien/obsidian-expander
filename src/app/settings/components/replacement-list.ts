@@ -22,6 +22,34 @@ function cloneReplacements(replacements: Replacement[]): Replacement[] {
 }
 
 /**
+ * Validate all replacements and return whether the configuration is valid
+ */
+function validateReplacements(replacements: Replacement[]): boolean {
+    const seenKeys = new Set<string>()
+
+    for (const replacement of replacements) {
+        // Check for empty keys
+        if (!replacement.key || replacement.key.trim().length === 0) {
+            return false
+        }
+
+        // Check for key validation errors
+        const error = validateKey(replacement.key)
+        if (error) {
+            return false
+        }
+
+        // Check for duplicate keys
+        if (seenKeys.has(replacement.key)) {
+            return false
+        }
+        seenKeys.add(replacement.key)
+    }
+
+    return true
+}
+
+/**
  * Render the replacement list component
  */
 export function renderReplacementList(props: ReplacementListProps): void {
@@ -34,20 +62,31 @@ export function renderReplacementList(props: ReplacementListProps): void {
     // Track the save button for enabling/disabling
     let saveButtonEl: HTMLButtonElement | null = null
 
-    const markDirty = (): void => {
-        hasUnsavedChanges = true
-        if (saveButtonEl) {
+    /**
+     * Update save button state based on changes and validation
+     */
+    const updateSaveButtonState = (): void => {
+        if (!saveButtonEl) return
+
+        const isValid = validateReplacements(localReplacements)
+
+        if (hasUnsavedChanges && isValid) {
             saveButtonEl.disabled = false
             saveButtonEl.classList.add('mod-cta')
+        } else {
+            saveButtonEl.disabled = true
+            saveButtonEl.classList.remove('mod-cta')
         }
+    }
+
+    const markDirty = (): void => {
+        hasUnsavedChanges = true
+        updateSaveButtonState()
     }
 
     const markClean = (): void => {
         hasUnsavedChanges = false
-        if (saveButtonEl) {
-            saveButtonEl.disabled = true
-            saveButtonEl.classList.remove('mod-cta')
-        }
+        updateSaveButtonState()
     }
 
     // Header
@@ -77,7 +116,8 @@ export function renderReplacementList(props: ReplacementListProps): void {
     actionRow.addButton((button) => {
         saveButtonEl = button.buttonEl
         button.setButtonText('Save').onClick(() => {
-            if (hasUnsavedChanges) {
+            const isValid = validateReplacements(localReplacements)
+            if (hasUnsavedChanges && isValid) {
                 onSave(localReplacements)
                 markClean()
                 new Notice('Settings saved')
