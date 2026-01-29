@@ -2,6 +2,7 @@ import { Notice, Setting } from 'obsidian'
 import type { Replacement } from '../../types/plugin-settings.intf'
 import { validateKey } from '../../../utils/validation'
 import { isFunctionExpression, evaluateValue } from '../../services/function-evaluator'
+import { isPropertyKey, getPropertyName } from '../../../utils/frontmatter'
 
 /**
  * Props for the replacement list component
@@ -54,7 +55,8 @@ export function renderReplacementList(props: ReplacementListProps): void {
 
     new Setting(containerEl).setDesc(
         'Define key-value pairs for expansion. Keys must be kebab-case (lowercase letters, numbers, hyphens). ' +
-            'Values can be static text or function expressions like now().format("YYYY-MM-DD").'
+            'Values can be static text or function expressions like now().format("YYYY-MM-DD"). ' +
+            'Keys starting with "prop." (e.g., prop.updated) will also update the corresponding frontmatter property.'
     )
 
     // Action buttons row
@@ -125,6 +127,18 @@ function renderReplacementItem(props: ReplacementItemProps): void {
     const keyRow = new Setting(itemEl).setName('Key').setClass('exp-replacement-key-row')
 
     const keyErrorEl = itemEl.createDiv({ cls: 'exp-key-error' })
+    const propertyIndicatorEl = itemEl.createDiv({ cls: 'exp-property-indicator' })
+
+    const updatePropertyIndicator = (key: string): void => {
+        if (isPropertyKey(key)) {
+            const propName = getPropertyName(key)
+            propertyIndicatorEl.textContent = `→ Updates frontmatter: ${propName}`
+            propertyIndicatorEl.classList.add('visible')
+        } else {
+            propertyIndicatorEl.textContent = ''
+            propertyIndicatorEl.classList.remove('visible')
+        }
+    }
 
     keyRow.addText((text) => {
         text.setPlaceholder('my-key')
@@ -133,6 +147,9 @@ function renderReplacementItem(props: ReplacementItemProps): void {
                 // Update local state directly - no re-render
                 replacement.key = value
                 onFieldChange()
+
+                // Update property indicator
+                updatePropertyIndicator(value)
 
                 // Validate key
                 const error = validateKey(value)
@@ -165,6 +182,8 @@ function renderReplacementItem(props: ReplacementItemProps): void {
                 keyErrorEl.classList.add('visible')
                 text.inputEl.classList.add('exp-input-error')
             }
+            // Initial property indicator
+            updatePropertyIndicator(replacement.key)
         }
     })
 

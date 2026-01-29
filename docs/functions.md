@@ -21,6 +21,43 @@ Expander supports function expressions for dynamic values. Functions can be chai
 | `file.ctime`                         | Creation date                  | `file.ctime.format("YYYY-MM-DD")`       |
 | `file.mtime`                         | Modification date              | `file.mtime.format("YYYY-MM-DD")`       |
 
+## Property Keys (prop.\*)
+
+Keys starting with `prop.` automatically update the corresponding frontmatter property when expanded.
+
+**Example replacement**:
+
+- Key: `prop.updated`
+- Value: `now().format("YYYY-MM-DD")`
+
+**In your note**:
+
+```markdown
+---
+title: My Note
+---
+
+<!-- expand: prop.updated -->
+```
+
+When expanded, this will:
+
+1. Insert the value inline: `<!-- expand: prop.updated -->2024-01-15<!---->`
+2. Update (or create) the `updated` property in frontmatter:
+
+```markdown
+---
+title: My Note
+updated: 2024-01-15
+---
+```
+
+This is useful for automatically maintaining metadata like:
+
+- `prop.updated` - Last modification date
+- `prop.created` - Creation date (use with `once` mode)
+- `prop.word-count` - Word count or other computed values
+
 ## File Fields
 
 Access metadata about the current file using `file.*` fields:

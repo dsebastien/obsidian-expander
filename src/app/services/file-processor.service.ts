@@ -1,6 +1,11 @@
 import type { App, TFile } from 'obsidian'
 import type { PluginSettings } from '../types/plugin-settings.intf'
-import type { ExpanderMatch, ProcessingResult, ReplacementResult } from '../types/expander.types'
+import type {
+    ExpanderMatch,
+    ProcessingResult,
+    ReplacementResult,
+    PropertyUpdate
+} from '../types/expander.types'
 import type { EvaluationContext } from '../types/evaluation-context'
 import type { ExpanderService } from './expander.service'
 import { findExpansions, findIncompleteExpansions } from '../../utils/regex'
@@ -8,6 +13,7 @@ import { processInBatches } from '../../utils/async'
 import { log } from '../../utils/log'
 import { MODE_TO_OPEN_MARKER, MODE_TO_END_MARKER, EXPANDER_CLOSE } from '../constants'
 import type { UpdateMode } from '../constants'
+import { isPropertyKey, getPropertyName, updateFrontmatterProperty } from '../../utils/frontmatter'
 
 /**
  * Service for processing files and replacing expansions
@@ -34,8 +40,26 @@ export class FileProcessorService {
             const content = await this.app.vault.read(file)
             const replacementResult = this.replaceExpansions(content, mode, file)
 
-            if (replacementResult.newContent !== null) {
-                await this.app.vault.modify(file, replacementResult.newContent)
+            let finalContent = replacementResult.newContent ?? content
+
+            // Apply property updates to frontmatter
+            if (replacementResult.propertyUpdates.length > 0) {
+                for (const update of replacementResult.propertyUpdates) {
+                    finalContent = updateFrontmatterProperty(
+                        finalContent,
+                        update.propertyName,
+                        update.value
+                    )
+                }
+            }
+
+            // Only write if content changed
+            const hasChanges =
+                replacementResult.newContent !== null ||
+                replacementResult.propertyUpdates.length > 0
+
+            if (hasChanges && finalContent !== content) {
+                await this.app.vault.modify(file, finalContent)
                 result.replacementsCount = replacementResult.replacementsCount
             }
 
@@ -81,14 +105,26 @@ export class FileProcessorService {
                 return false
             }
 
+            let newContent = content
+            let hasChanges = false
+
             // Check if value actually changed
-            if (match.currentValue === newValue) {
-                return true
+            if (match.currentValue !== newValue) {
+                // Build new content
+                newContent = this.replaceMatch(content, match, newValue)
+                hasChanges = true
             }
 
-            // Build new content
-            const newContent = this.replaceMatch(content, match, newValue)
-            await this.app.vault.modify(file, newContent)
+            // Handle property updates for prop.* keys
+            if (isPropertyKey(key)) {
+                newContent = updateFrontmatterProperty(newContent, getPropertyName(key), newValue)
+                hasChanges = true
+            }
+
+            if (hasChanges && newContent !== content) {
+                await this.app.vault.modify(file, newContent)
+            }
+
             return true
         } catch (error) {
             log(`Error processing expansion ${key} in ${file.path}`, 'error', error)
@@ -147,6 +183,7 @@ export class FileProcessorService {
         file?: TFile
     ): ReplacementResult {
         const unknownKeys: string[] = []
+        const propertyUpdates: PropertyUpdate[] = []
         let newContent = content
         let replacementsCount = 0
         let hasChanges = false
@@ -159,6 +196,7 @@ export class FileProcessorService {
             newContent,
             mode,
             unknownKeys,
+            propertyUpdates,
             context
         )
         if (incompleteResult.changed) {
@@ -198,7 +236,22 @@ export class FileProcessorService {
 
             // Check if value actually changed
             if (match.currentValue === newValue) {
+                // Even if value didn't change, track property updates for prop.* keys
+                if (isPropertyKey(match.key)) {
+                    propertyUpdates.push({
+                        propertyName: getPropertyName(match.key),
+                        value: newValue
+                    })
+                }
                 continue
+            }
+
+            // Track property updates for prop.* keys
+            if (isPropertyKey(match.key)) {
+                propertyUpdates.push({
+                    propertyName: getPropertyName(match.key),
+                    value: newValue
+                })
             }
 
             // Apply replacement
@@ -220,7 +273,8 @@ export class FileProcessorService {
         return {
             newContent: hasChanges ? newContent : null,
             unknownKeys,
-            replacementsCount
+            replacementsCount,
+            propertyUpdates
         }
     }
 
@@ -231,6 +285,7 @@ export class FileProcessorService {
         content: string,
         mode: 'auto' | 'all',
         unknownKeys: string[],
+        propertyUpdates: PropertyUpdate[],
         context?: EvaluationContext
     ): { content: string; changed: boolean; count: number } {
         const incomplete = findIncompleteExpansions(content)
@@ -265,6 +320,14 @@ export class FileProcessorService {
                     newContent.substring(inc.endOffset)
                 count++
                 continue
+            }
+
+            // Track property updates for prop.* keys
+            if (isPropertyKey(inc.key)) {
+                propertyUpdates.push({
+                    propertyName: getPropertyName(inc.key),
+                    value: newValue
+                })
             }
 
             // For once-and-eject, replace opening tag with just the value

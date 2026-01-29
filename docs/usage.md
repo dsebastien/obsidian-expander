@@ -202,3 +202,25 @@ upper(file.name)                 → MY NOTE
 
 - Key: `year`
 - Value: `date(file.name).format("YYYY")`
+
+### Property Keys (prop.\*)
+
+Keys starting with `prop.` automatically update frontmatter properties.
+
+**Auto-update modification date**:
+
+- Key: `prop.updated`
+- Value: `now().format("YYYY-MM-DD")`
+
+This creates/updates the `updated` property in the note's frontmatter.
+
+**Set creation date once**:
+
+- Key: `prop.created`
+- Value: `now().format("YYYY-MM-DD")`
+- Use with `once` mode: `<!-- expand-once: prop.created -->`
+
+**Sync title from file name**:
+
+- Key: `prop.title`
+- Value: `file.name`

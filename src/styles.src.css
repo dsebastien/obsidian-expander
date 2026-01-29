@@ -66,6 +66,17 @@
     border-color: var(--text-error) !important;
 }
 
+.exp-property-indicator {
+    @apply text-xs mt-1 px-2 py-1 rounded hidden;
+    background-color: color-mix(in srgb, var(--color-cyan) 15%, transparent);
+    color: var(--color-cyan);
+    border: 1px solid color-mix(in srgb, var(--color-cyan) 30%, transparent);
+}
+
+.exp-property-indicator.visible {
+    @apply block;
+}
+
 .exp-value-preview {
     @apply text-xs mt-1 px-2 py-1 rounded hidden;
     background-color: var(--background-primary-alt);

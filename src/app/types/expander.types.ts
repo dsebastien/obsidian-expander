@@ -54,6 +54,16 @@ export interface ProcessingResult {
 }
 
 /**
+ * A property update to apply to frontmatter
+ */
+export interface PropertyUpdate {
+    /** The property name (without "prop." prefix) */
+    propertyName: string
+    /** The value to set */
+    value: string
+}
+
+/**
  * Result of replacing expansions in content
  */
 export interface ReplacementResult {
@@ -63,4 +73,6 @@ export interface ReplacementResult {
     unknownKeys: string[]
     /** Number of replacements made */
     replacementsCount: number
+    /** Property updates to apply to frontmatter */
+    propertyUpdates: PropertyUpdate[]
 }
