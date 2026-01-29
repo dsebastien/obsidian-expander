@@ -132,7 +132,7 @@ function renderReplacementItem(props: ReplacementItemProps): void {
     const updatePropertyIndicator = (key: string): void => {
         if (isPropertyKey(key)) {
             const propName = getPropertyName(key)
-            propertyIndicatorEl.textContent = `→ Updates frontmatter: ${propName}`
+            propertyIndicatorEl.textContent = `→ Updates frontmatter property: ${propName}`
             propertyIndicatorEl.classList.add('visible')
         } else {
             propertyIndicatorEl.textContent = ''

@@ -5,7 +5,8 @@ import { RangeSetBuilder } from '@codemirror/state'
 import type { App, TFile } from 'obsidian'
 import type { PluginSettings } from './types/plugin-settings.intf'
 import type { UpdateMode } from './constants'
-import { findExpansions } from '../utils/regex'
+import { findExpansions, findIncompleteExpansions } from '../utils/regex'
+import { isPropertyKey } from '../utils/frontmatter'
 
 /**
  * Icon SVGs for mode badges
@@ -115,31 +116,56 @@ export function createExpanderExtension(
                 const builder = new RangeSetBuilder<Decoration>()
                 const text = view.state.doc.toString()
 
-                const matches = findExpansions(text)
+                // Collect all decoration positions to add in order
+                const decorations: Array<{ pos: number; key: string; mode: UpdateMode }> = []
 
+                // Process complete expansions (with closing markers)
+                const matches = findExpansions(text)
                 for (const match of matches) {
                     // Find the line containing the closing marker
                     const closingMarkerStart = text.indexOf(match.closeMarker, match.startOffset)
                     if (closingMarkerStart === -1) continue
 
                     const closingMarkerEnd = closingMarkerStart + match.closeMarker.length
+                    decorations.push({
+                        pos: closingMarkerEnd,
+                        key: match.key,
+                        mode: match.updateMode
+                    })
+                }
 
-                    // Add widget decoration after closing marker
+                // Process incomplete prop.* expansions (no closing marker needed)
+                const incomplete = findIncompleteExpansions(text)
+                for (const inc of incomplete) {
+                    if (isPropertyKey(inc.key)) {
+                        decorations.push({
+                            pos: inc.endOffset,
+                            key: inc.key,
+                            mode: inc.updateMode
+                        })
+                    }
+                }
+
+                // Sort by position (required by RangeSetBuilder)
+                decorations.sort((a, b) => a.pos - b.pos)
+
+                // Add all decorations
+                for (const dec of decorations) {
                     const widget = new ExpanderWidget(
-                        match.key,
-                        match.updateMode,
+                        dec.key,
+                        dec.mode,
                         settings.showRefreshButton,
                         () => {
                             const activeFile = app.workspace.getActiveFile()
                             if (activeFile) {
-                                void onRefresh(activeFile, match.key)
+                                void onRefresh(activeFile, dec.key)
                             }
                         }
                     )
 
                     builder.add(
-                        closingMarkerEnd,
-                        closingMarkerEnd,
+                        dec.pos,
+                        dec.pos,
                         Decoration.widget({
                             widget,
                             side: 1

@@ -23,6 +23,12 @@ export const EXPANDER_END = '<!---->'
 export const KEY_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
 /**
+ * Property key format pattern - "prop." followed by any non-empty property name
+ * Obsidian frontmatter property names are very permissive
+ */
+export const PROP_KEY_PATTERN = /^prop\..+$/
+
+/**
  * Minimum milliseconds between automatic update events
  */
 export const MINIMUM_MS_BETWEEN_EVENTS = 500

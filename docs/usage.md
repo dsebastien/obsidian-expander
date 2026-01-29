@@ -20,6 +20,8 @@ The plugin will automatically add the value and closing tag, resulting in:
 
 Whitespace around the key is flexible: `<!-- expand:key -->` and `<!-- expand:  key  -->` both work.
 
+**Exception**: Keys starting with `prop.` (e.g., `prop.updated`) only update frontmatter properties — no value is inserted and no closing marker is added. See [Property Keys](#property-keys-prop) for details.
+
 ## Update Modes
 
 Expander supports four update modes, each with a different marker prefix:
@@ -302,14 +304,18 @@ upper(file.name)                 → MY NOTE
 
 ### Property Keys (prop.\*)
 
-Keys starting with `prop.` automatically update frontmatter properties.
+Keys starting with `prop.` are special — they **only update frontmatter properties** without inserting any text into the document. No closing marker is needed.
+
+```markdown
+<!-- expand: prop.updated -->
+```
+
+When triggered, this updates the `updated` frontmatter property but leaves the marker unchanged (no closing tag, no value inserted). The mode badge and refresh button are still displayed.
 
 **Auto-update modification date**:
 
 - Key: `prop.updated`
 - Value: `now().format("YYYY-MM-DD")`
-
-This creates/updates the `updated` property in the note's frontmatter.
 
 **Set creation date once**:
 

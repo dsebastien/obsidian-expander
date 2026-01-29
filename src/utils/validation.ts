@@ -1,23 +1,39 @@
-import { KEY_PATTERN } from '../app/constants'
+import { KEY_PATTERN, PROP_KEY_PATTERN } from '../app/constants'
 
 /**
- * Check if a key is valid kebab-case format
- * Valid: lowercase letters, numbers, hyphens (no leading/trailing hyphens)
- * Examples: "my-key", "hello-world-123", "simple"
+ * Check if a key is valid
+ * - Regular keys: kebab-case (lowercase letters, numbers, hyphens)
+ * - Property keys: "prop." followed by any non-empty property name
+ * Examples: "my-key", "hello-world-123", "prop.foo", "prop.foo bar", "prop.foo_bar"
  */
 export function isValidKey(key: string): boolean {
     if (!key || typeof key !== 'string') {
         return false
     }
-    return KEY_PATTERN.test(key)
+    return KEY_PATTERN.test(key) || PROP_KEY_PATTERN.test(key)
 }
 
 /**
- * Normalize a key to lowercase and trimmed
+ * Check if a key is a property key (starts with "prop.")
+ */
+function isPropKey(key: string): boolean {
+    return key.startsWith('prop.')
+}
+
+/**
+ * Normalize a key
+ * - Regular keys: lowercase and trimmed
+ * - Property keys: trim key and property name, preserve case
  * Does not validate - use isValidKey() for validation
  */
 export function normalizeKey(key: string): string {
-    return key.toLowerCase().trim()
+    const trimmed = key.trim()
+    if (isPropKey(trimmed)) {
+        // Trim the property name part after "prop."
+        const propName = trimmed.slice(5).trim() // Remove "prop." and trim
+        return `prop.${propName}`
+    }
+    return trimmed.toLowerCase()
 }
 
 /**
@@ -31,12 +47,22 @@ export function validateKey(key: string): string | null {
 
     const normalized = normalizeKey(key)
 
-    if (normalized !== key) {
-        return 'Key must be lowercase and trimmed'
+    // For prop.* keys, check the property name is not empty after trimming
+    if (isPropKey(normalized)) {
+        const propName = normalized.slice(5) // Remove "prop."
+        if (propName.length === 0) {
+            return 'Property key must be "prop." followed by a property name (e.g., prop.updated)'
+        }
+        return null
     }
 
-    if (!isValidKey(key)) {
-        return 'Key must be kebab-case (lowercase letters, numbers, hyphens only, no leading/trailing hyphens)'
+    // For regular keys, check lowercase and kebab-case
+    if (normalized !== key.trim().toLowerCase()) {
+        return 'Key must be lowercase'
+    }
+
+    if (!KEY_PATTERN.test(normalized)) {
+        return 'Key must be kebab-case (lowercase letters, numbers, hyphens only)'
     }
 
     return null

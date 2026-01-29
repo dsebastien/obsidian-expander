@@ -2,18 +2,29 @@ import type { UpdateMode } from '../app/constants'
 import type { ExpanderMatch, IncompleteExpansion } from '../app/types/expander.types'
 
 /**
+ * Key pattern: kebab-case OR prop.* (property keys with permissive names)
+ * - Kebab-case: [a-z0-9]+(?:-[a-z0-9]+)*
+ * - Prop keys: prop\.(?:(?!\s*-->).)+
+ *   Uses negative lookahead to stop before the closing --> marker
+ *   Allows any characters (including spaces) in property names
+ */
+const KEY_REGEX_PART = '(?:[a-z0-9]+(?:-[a-z0-9]+)*|prop\\.(?:(?!\\s*-->).)+)'
+
+/**
  * Pre-compiled regex for matching all expander marker variants
  * Captures: opening marker type, key, value content
  *
  * Pattern breakdown:
  * - <!--\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\s* - Opening marker with variant
- * - ([a-z0-9]+(?:-[a-z0-9]+)*) - Key in kebab-case
+ * - (KEY_REGEX_PART) - Key in kebab-case or prop.* format
  * - \s*--> - End of opening marker
  * - ([\s\S]*?) - Value content (non-greedy, including newlines)
  * - <!--\s*--> - Universal closing marker (empty comment)
  */
-const EXPANDER_REGEX =
-    /<!--\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\s*([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->([\s\S]*?)<!--\s*-->/g
+const EXPANDER_REGEX = new RegExp(
+    `<!--\\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\\s*(${KEY_REGEX_PART})\\s*-->([\\s\\S]*?)<!--\\s*-->`,
+    'g'
+)
 
 /**
  * Map marker type string to UpdateMode
@@ -77,8 +88,10 @@ export function findExpansions(text: string): ExpanderMatch[] {
 /**
  * Regex for matching opening markers only (without closing tag)
  */
-const OPENING_MARKER_REGEX =
-    /<!--\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\s*([a-z0-9]+(?:-[a-z0-9]+)*)\s*-->/g
+const OPENING_MARKER_REGEX = new RegExp(
+    `<!--\\s*(expand(?:-(?:manual|once(?:-and-eject)?))?):\\s*(${KEY_REGEX_PART})\\s*-->`,
+    'g'
+)
 
 /**
  * Find incomplete expansions (opening tags without closing tags)

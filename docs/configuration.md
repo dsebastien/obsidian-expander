@@ -17,6 +17,14 @@ Keys must be in **kebab-case**:
 
 **Invalid examples**: `My-Key`, `hello_world`, `-start`, `end-`
 
+### Property Keys (prop.\*)
+
+Keys starting with `prop.` are special: they **only** update the corresponding frontmatter property — no text is inserted between the markers.
+
+**Valid examples**: `prop.updated`, `prop.created`, `prop.my-property`, `prop.foo bar`, `prop.foo_bar`, `prop.foo.bar`
+
+The property name after `prop.` can be almost anything - it follows Obsidian's permissive frontmatter property naming. See [Functions](functions.md#property-keys-prop) for more details.
+
 ### Value Format
 
 Values can be:

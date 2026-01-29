@@ -108,16 +108,13 @@ export class FileProcessorService {
             let newContent = content
             let hasChanges = false
 
-            // Check if value actually changed
-            if (match.currentValue !== newValue) {
-                // Build new content
-                newContent = this.replaceMatch(content, match, newValue)
-                hasChanges = true
-            }
-
-            // Handle property updates for prop.* keys
+            // Handle property updates for prop.* keys (only update frontmatter, not content)
             if (isPropertyKey(key)) {
                 newContent = updateFrontmatterProperty(newContent, getPropertyName(key), newValue)
+                hasChanges = true
+            } else if (match.currentValue !== newValue) {
+                // For non-property keys, update content between markers
+                newContent = this.replaceMatch(content, match, newValue)
                 hasChanges = true
             }
 
@@ -246,15 +243,19 @@ export class FileProcessorService {
                 continue
             }
 
-            // Track property updates for prop.* keys
+            // Track property updates for prop.* keys (only update frontmatter, not content)
             if (isPropertyKey(match.key)) {
                 propertyUpdates.push({
                     propertyName: getPropertyName(match.key),
                     value: newValue
                 })
+                // For prop.* keys, we only update frontmatter, not the content between markers
+                replacementsCount++
+                hasChanges = true
+                continue
             }
 
-            // Apply replacement
+            // Apply replacement for non-property keys
             if (match.updateMode === 'once-and-eject') {
                 // For once-and-eject, replace the entire match with just the value
                 newContent =
@@ -312,7 +313,11 @@ export class FileProcessorService {
                 if (!unknownKeys.includes(inc.key)) {
                     unknownKeys.push(inc.key)
                 }
-                // Still add the closing tag, but with empty value
+                // For prop.* keys, don't add closing marker - just report unknown
+                if (isPropertyKey(inc.key)) {
+                    continue
+                }
+                // For regular keys, add the closing tag with empty value
                 const closeMarker = this.buildCloseMarker()
                 newContent =
                     newContent.substring(0, inc.endOffset) +
@@ -322,12 +327,15 @@ export class FileProcessorService {
                 continue
             }
 
-            // Track property updates for prop.* keys
+            // Track property updates for prop.* keys (only update frontmatter, no content changes)
             if (isPropertyKey(inc.key)) {
                 propertyUpdates.push({
                     propertyName: getPropertyName(inc.key),
                     value: newValue
                 })
+                // For prop.* keys, don't add closing marker - just update frontmatter
+                count++
+                continue
             }
 
             // For once-and-eject, replace opening tag with just the value

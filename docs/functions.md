@@ -79,7 +79,7 @@ Expander supports function expressions for dynamic values. Functions can be chai
 
 ## Property Keys (prop.\*)
 
-Keys starting with `prop.` automatically update the corresponding frontmatter property when expanded.
+Keys starting with `prop.` automatically update the corresponding frontmatter property when expanded. Unlike regular keys, property keys **only update frontmatter** — they don't insert any visible text between the markers.
 
 **Example replacement**:
 
@@ -96,17 +96,18 @@ title: My Note
 <!-- expand: prop.updated -->
 ```
 
-When expanded, this will:
-
-1. Insert the value inline: `<!-- expand: prop.updated -->2024-01-15<!---->`
-2. Update (or create) the `updated` property in frontmatter:
+When expanded, this will update (or create) the `updated` property in frontmatter:
 
 ```markdown
 ---
 title: My Note
 updated: 2024-01-15
 ---
+
+<!-- expand: prop.updated -->
 ```
+
+The marker stays as-is (no closing marker needed) — it only triggers the frontmatter update. The mode badge and refresh button are still displayed next to the marker.
 
 This is useful for automatically maintaining metadata like:
 
