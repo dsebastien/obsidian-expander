@@ -345,13 +345,24 @@ export class FileProcessorService {
                     newValue +
                     newContent.substring(inc.endOffset)
             } else {
-                // Add value and closing tag after opening tag
+                // Check if text after opening marker already matches the value
+                const textAfterMarker = newContent.substring(inc.endOffset)
                 const closeMarker = this.buildCloseMarker()
-                newContent =
-                    newContent.substring(0, inc.endOffset) +
-                    newValue +
-                    closeMarker +
-                    newContent.substring(inc.endOffset)
+
+                if (textAfterMarker.startsWith(newValue)) {
+                    // Value already present, just add closing marker after it
+                    newContent =
+                        newContent.substring(0, inc.endOffset + newValue.length) +
+                        closeMarker +
+                        newContent.substring(inc.endOffset + newValue.length)
+                } else {
+                    // Add value and closing tag after opening tag
+                    newContent =
+                        newContent.substring(0, inc.endOffset) +
+                        newValue +
+                        closeMarker +
+                        newContent.substring(inc.endOffset)
+                }
             }
             count++
         }
