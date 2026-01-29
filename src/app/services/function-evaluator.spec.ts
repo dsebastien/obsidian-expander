@@ -570,3 +570,248 @@ describe('evaluateValue - format patterns', () => {
         expect(result).toBe('2024/01/15')
     })
 })
+
+describe('evaluateValue - title() function', () => {
+    test('title("text") converts to title case', () => {
+        expect(evaluateValue('title("hello world")')).toBe('Hello World')
+    })
+
+    test('file.name.title() converts file name to title case', () => {
+        const mockFile = createMockFile({ basename: 'my test note' })
+        const context: EvaluationContext = { file: mockFile }
+        expect(evaluateValue('file.name.title()', context)).toBe('My Test Note')
+    })
+})
+
+describe('evaluateValue - slice() function', () => {
+    test('slice with start and end', () => {
+        expect(evaluateValue('upper("hello world").slice(0, 5)')).toBe('HELLO')
+    })
+
+    test('slice with start only', () => {
+        expect(evaluateValue('upper("hello world").slice(6)')).toBe('WORLD')
+    })
+
+    test('slice with negative index', () => {
+        expect(evaluateValue('upper("hello world").slice(-5)')).toBe('WORLD')
+    })
+})
+
+describe('evaluateValue - repeat() function', () => {
+    test('repeat repeats string N times', () => {
+        expect(evaluateValue('upper("ab").repeat(3)')).toBe('ABABAB')
+    })
+
+    test('repeat with zero count', () => {
+        expect(evaluateValue('upper("hello").repeat(0)')).toBe('')
+    })
+})
+
+describe('evaluateValue - boolean string methods', () => {
+    test('startsWith returns true', () => {
+        expect(evaluateValue('upper("hello world").startsWith("HELLO")')).toBe('true')
+    })
+
+    test('startsWith returns false', () => {
+        expect(evaluateValue('upper("hello world").startsWith("WORLD")')).toBe('false')
+    })
+
+    test('endsWith returns true', () => {
+        expect(evaluateValue('upper("hello world").endsWith("WORLD")')).toBe('true')
+    })
+
+    test('endsWith returns false', () => {
+        expect(evaluateValue('upper("hello world").endsWith("HELLO")')).toBe('false')
+    })
+
+    test('contains returns true', () => {
+        expect(evaluateValue('upper("hello world").contains("LO WO")')).toBe('true')
+    })
+
+    test('contains returns false', () => {
+        expect(evaluateValue('upper("hello world").contains("xyz")')).toBe('false')
+    })
+
+    test('isEmpty returns true for empty string', () => {
+        expect(evaluateValue('upper("").isEmpty()')).toBe('true')
+    })
+
+    test('isEmpty returns false for non-empty string', () => {
+        expect(evaluateValue('upper("hello").isEmpty()')).toBe('false')
+    })
+})
+
+describe('evaluateValue - reverse() function', () => {
+    test('reverses string characters', () => {
+        expect(evaluateValue('upper("hello").reverse()')).toBe('OLLEH')
+    })
+})
+
+describe('evaluateValue - split() function', () => {
+    test('splits string on separator', () => {
+        expect(evaluateValue('upper("a,b,c").split(",")')).toBe('A, B, C')
+    })
+})
+
+describe('evaluateValue - date methods', () => {
+    test('date().date() removes time component', () => {
+        const result = evaluateValue('now().date().format("HH:mm:ss")')
+        expect(result).toBe('00:00:00')
+    })
+
+    test('now().time() extracts time', () => {
+        const result = evaluateValue('now().time()')
+        expect(result).toMatch(/^\d{2}:\d{2}:\d{2}$/)
+    })
+
+    test('date.relative() returns relative time', () => {
+        // This will vary based on current time, just check it returns something
+        const result = evaluateValue('date("2020-01-01").relative()')
+        expect(result).toContain('ago')
+    })
+
+    test('date.isEmpty() returns false', () => {
+        const result = evaluateValue('now().isEmpty()')
+        expect(result).toBe('false')
+    })
+})
+
+describe('evaluateValue - number() function', () => {
+    test('number() parses integer', () => {
+        expect(evaluateValue('number("42")')).toBe('42')
+    })
+
+    test('number() parses decimal', () => {
+        expect(evaluateValue('number("3.14")')).toBe('3.14')
+    })
+
+    test('number() parses negative', () => {
+        expect(evaluateValue('number("-5")')).toBe('-5')
+    })
+
+    test('number().abs() returns absolute value', () => {
+        expect(evaluateValue('number("-5").abs()')).toBe('5')
+    })
+
+    test('number().ceil() rounds up', () => {
+        expect(evaluateValue('number("3.2").ceil()')).toBe('4')
+    })
+
+    test('number().floor() rounds down', () => {
+        expect(evaluateValue('number("3.9").floor()')).toBe('3')
+    })
+
+    test('number().round() rounds to nearest', () => {
+        expect(evaluateValue('number("3.6").round()')).toBe('4')
+    })
+
+    test('number().round(digits) rounds to decimal places', () => {
+        expect(evaluateValue('number("3.14159").round(2)')).toBe('3.14')
+    })
+
+    test('number().toFixed(precision) formats with decimals', () => {
+        expect(evaluateValue('number("3").toFixed(2)')).toBe('3.00')
+    })
+
+    test('number().isEmpty() returns false for valid number', () => {
+        expect(evaluateValue('number("42").isEmpty()')).toBe('false')
+    })
+
+    test('number().isEmpty() returns true for NaN', () => {
+        expect(evaluateValue('number("abc").isEmpty()')).toBe('true')
+    })
+})
+
+describe('evaluateValue - min() and max() functions', () => {
+    test('min() returns minimum value', () => {
+        expect(evaluateValue('min(5, 3, 8)')).toBe('3')
+    })
+
+    test('max() returns maximum value', () => {
+        expect(evaluateValue('max(5, 3, 8)')).toBe('8')
+    })
+
+    test('min() with negative numbers', () => {
+        expect(evaluateValue('min(-5, 3, 0)')).toBe('-5')
+    })
+
+    test('max() with negative numbers', () => {
+        expect(evaluateValue('max(-5, 3, 0)')).toBe('3')
+    })
+})
+
+describe('evaluateValue - if() conditional function', () => {
+    test('if() with truthy condition returns true result', () => {
+        expect(evaluateValue('if("true", "yes", "no")')).toBe('yes')
+    })
+
+    test('if() with falsy empty string returns false result', () => {
+        expect(evaluateValue('if("", "yes", "no")')).toBe('no')
+    })
+
+    test('if() with falsy "false" returns false result', () => {
+        expect(evaluateValue('if("false", "yes", "no")')).toBe('no')
+    })
+
+    test('if() with falsy "0" returns false result', () => {
+        expect(evaluateValue('if("0", "yes", "no")')).toBe('no')
+    })
+
+    test('if() without false result returns empty string', () => {
+        expect(evaluateValue('if("", "yes")')).toBe('')
+    })
+
+    test('if() with non-empty string is truthy', () => {
+        expect(evaluateValue('if("hello", "yes", "no")')).toBe('yes')
+    })
+
+    test('if() with whitespace-only is falsy (trimmed to empty)', () => {
+        expect(evaluateValue('if("   ", "yes", "no")')).toBe('no')
+    })
+})
+
+describe('evaluateValue - escapeHTML() function', () => {
+    test('escapes < and >', () => {
+        expect(evaluateValue('escapeHTML("<div>")')).toBe('&lt;div&gt;')
+    })
+
+    test('escapes &', () => {
+        expect(evaluateValue('escapeHTML("foo & bar")')).toBe('foo &amp; bar')
+    })
+
+    test('escapes quotes', () => {
+        expect(evaluateValue('escapeHTML("say \\"hello\\"")')).toBe('say &quot;hello&quot;')
+    })
+
+    test('escapes single quotes', () => {
+        expect(evaluateValue('escapeHTML("it\'s")')).toBe('it&#039;s')
+    })
+
+    test('handles plain text', () => {
+        expect(evaluateValue('escapeHTML("hello world")')).toBe('hello world')
+    })
+})
+
+describe('evaluateValue - number literals in arguments', () => {
+    test('handles numeric arguments', () => {
+        expect(evaluateValue('min(5, 3, 8)')).toBe('3')
+    })
+
+    test('handles negative numeric arguments', () => {
+        expect(evaluateValue('min(-5, -3, -8)')).toBe('-8')
+    })
+
+    test('handles decimal numeric arguments', () => {
+        expect(evaluateValue('max(1.5, 2.5, 0.5)')).toBe('2.5')
+    })
+})
+
+describe('evaluateValue - chained number methods', () => {
+    test('chains abs().ceil()', () => {
+        expect(evaluateValue('number("-3.2").abs().ceil()')).toBe('4')
+    })
+
+    test('chains floor().abs()', () => {
+        expect(evaluateValue('number("-3.9").floor().abs()')).toBe('4')
+    })
+})

@@ -1,4 +1,4 @@
-import { format as dateFnsFormat, startOfDay, parseISO } from 'date-fns'
+import { format as dateFnsFormat, startOfDay, parseISO, formatDistanceToNow } from 'date-fns'
 
 /**
  * Format token mapping from moment.js/custom tokens to date-fns tokens
@@ -90,6 +90,35 @@ export class DateValue {
      */
     format(pattern: string): string {
         return formatDate(this.date, pattern)
+    }
+
+    /**
+     * Remove the time component, returning start of day
+     */
+    dateOnly(): DateValue {
+        return new DateValue(startOfDay(this.date))
+    }
+
+    /**
+     * Extract the time portion as a string in HH:mm:ss format
+     */
+    time(): string {
+        return formatDate(this.date, 'HH:mm:ss')
+    }
+
+    /**
+     * Get a human-readable relative time description
+     * e.g., "3 days ago", "in 2 hours"
+     */
+    relative(): string {
+        return formatDistanceToNow(this.date, { addSuffix: true })
+    }
+
+    /**
+     * Check if date is empty (always returns false for valid DateValue)
+     */
+    isEmpty(): boolean {
+        return false
     }
 
     /**

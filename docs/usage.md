@@ -101,12 +101,15 @@ Replacement values can use function expressions for dynamic content. See [Functi
 
 ### Date Functions
 
-| Function             | Description            |
-| -------------------- | ---------------------- |
-| `now()`              | Current date and time  |
-| `today()`            | Today at midnight      |
-| `date("string")`     | Parse date from string |
-| `.format("pattern")` | Format a date          |
+| Function             | Description                  |
+| -------------------- | ---------------------------- |
+| `now()`              | Current date and time        |
+| `today()`            | Today at midnight            |
+| `date("string")`     | Parse date from string       |
+| `.format("pattern")` | Format a date                |
+| `.date()`            | Remove time component        |
+| `.time()`            | Extract time as HH:mm:ss     |
+| `.relative()`        | Human-readable relative time |
 
 **Format patterns**: `YYYY` (year), `MM` (month), `DD` (day), `HH` (hour 24h), `mm` (minute), `ss` (second)
 
@@ -119,6 +122,8 @@ today().format("MM/DD/YYYY")         → 01/15/2024
 now().format("YYYY-MM-DD HH:mm:ss")  → 2024-01-15 14:30:45
 date("2024-01-15").format("YYYY")    → 2024
 date(file.name).format("DD/MM/YYYY") → 15/01/2024
+now().time()                         → 14:30:45
+file.mtime.relative()                → 3 days ago
 ```
 
 ### String Functions
@@ -127,16 +132,86 @@ date(file.name).format("DD/MM/YYYY") → 15/01/2024
 | ------------------------------------ | ---------------------------------- |
 | `upper("text")`                      | Convert to uppercase               |
 | `lower("text")`                      | Convert to lowercase               |
+| `title("text")`                      | Convert to Title Case              |
 | `trim("text")`                       | Remove leading/trailing whitespace |
 | `replace("text", "find", "replace")` | Replace all occurrences            |
+| `.slice(start, end?)`                | Extract substring                  |
+| `.repeat(n)`                         | Repeat string N times              |
+| `.reverse()`                         | Reverse characters                 |
+| `.split(sep, limit?)`                | Split to array                     |
+
+**Boolean methods** (return `true`/`false`):
+
+| Function                | Description             |
+| ----------------------- | ----------------------- |
+| `.startsWith(query)`    | Test string beginning   |
+| `.endsWith(query)`      | Test string ending      |
+| `.contains(value)`      | Test substring presence |
+| `.containsAll(...vals)` | All substrings present  |
+| `.containsAny(...vals)` | Any substring present   |
+| `.isEmpty()`            | Check if empty          |
 
 **Examples**:
 
 ```
 upper("hello")                    → HELLO
 lower("WORLD")                    → world
+title("hello world")              → Hello World
 trim("  spaced  ")                → spaced
 replace("a-b-c", "-", "_")        → a_b_c
+upper("hello").slice(0, 3)        → HEL
+"ab".repeat(3)                    → ababab
+file.name.contains("draft")       → true/false
+```
+
+### Number Functions
+
+| Function               | Description            |
+| ---------------------- | ---------------------- |
+| `number("value")`      | Parse string to number |
+| `min(val1, val2, ...)` | Get minimum value      |
+| `max(val1, val2, ...)` | Get maximum value      |
+| `.abs()`               | Absolute value         |
+| `.ceil()`              | Round up               |
+| `.floor()`             | Round down             |
+| `.round(digits?)`      | Round to precision     |
+| `.toFixed(precision)`  | Format decimals        |
+
+**Examples**:
+
+```
+number("-5").abs()         → 5
+number("3.7").ceil()       → 4
+number("3.7").floor()      → 3
+number("3.14159").round(2) → 3.14
+min(5, 3, 8)               → 3
+max(5, 3, 8)               → 8
+```
+
+### Conditional Function
+
+| Function                      | Description       |
+| ----------------------------- | ----------------- |
+| `if(condition, true, false?)` | Conditional value |
+
+**Examples**:
+
+```
+if("true", "yes", "no")                        → yes
+if("", "yes", "no")                            → no
+if(file.name.contains("draft"), "DRAFT", "")   → DRAFT (if filename contains "draft")
+```
+
+### Utility Functions
+
+| Function           | Description            |
+| ------------------ | ---------------------- |
+| `escapeHTML(text)` | Escape HTML characters |
+
+**Examples**:
+
+```
+escapeHTML("<div>")  → &lt;div&gt;
 ```
 
 ### Chaining Functions
@@ -147,6 +222,8 @@ Functions can be chained together:
 now().format("YYYY-MM-DD").replace("-", "/")  → 2024/01/15
 upper("hello").replace("L", "X")              → HEXXO
 now().format("MMMM").lower()                  → january
+file.name.title().replace(" ", "-")           → My-Note-Title
+number("-3.7").abs().ceil()                   → 4
 ```
 
 ### File Fields
@@ -202,6 +279,26 @@ upper(file.name)                 → MY NOTE
 
 - Key: `year`
 - Value: `date(file.name).format("YYYY")`
+
+**Title case file name**:
+
+- Key: `title`
+- Value: `file.name.title()`
+
+**Relative modification time**:
+
+- Key: `last-modified`
+- Value: `file.mtime.relative()`
+
+**Draft indicator** (shows "DRAFT" if filename contains "draft"):
+
+- Key: `status`
+- Value: `if(file.name.contains("draft"), "DRAFT", "Published")`
+
+**Current time only**:
+
+- Key: `time`
+- Value: `now().time()`
 
 ### Property Keys (prop.\*)
 

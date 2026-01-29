@@ -52,6 +52,7 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "test": "bun test",
+        "validate": "bun run tsc && bun test && bun run lint",
         "prepare": "husky",
         "commit": "cz",
         "cm": "cz",

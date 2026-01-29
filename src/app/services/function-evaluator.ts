@@ -1,6 +1,11 @@
 /**
  * Function evaluator for dynamic value expressions
  * Supports: now(), today(), date(), format(), lower(), upper(), trim(), replace(), file.*
+ * Also supports: title(), slice(), repeat(), startsWith(), endsWith(), contains(), isEmpty()
+ * Number functions: number(), min(), max(), abs(), ceil(), floor(), round(), toFixed()
+ * Date functions: date(), time(), relative()
+ * Control flow: if()
+ * Utility: escapeHTML()
  *
  * Examples:
  * - "now().format('YYYY-MM-DD')"
@@ -11,6 +16,10 @@
  * - "lower('HELLO')" → "hello"
  * - "trim('  hello  ')" → "hello"
  * - "replace('hello world', 'world', 'there')" → "hello there"
+ * - "'hello world'.title()" → "Hello World"
+ * - "if(file.name.isEmpty(), 'No name', file.name)"
+ * - "number('42').abs()" → "42"
+ * - "min(5, 3, 8)" → "3"
  * - Chaining: "upper('hello').replace('L', 'X')" → "HEXXO"
  * - File fields: "file.name", "file.path", "file.ctime.format('YYYY-MM-DD')"
  * - File with functions: "file.name.upper()", "upper(file.name)"
@@ -25,13 +34,23 @@ import {
     createDateFromString
 } from '../../utils/date'
 import { StringValue, createString } from '../../utils/string'
+import { NumberValue, parseNumber, minValue, maxValue } from '../../utils/number'
 import type { EvaluationContext } from '../types/evaluation-context'
 import { getFileFields } from '../types/evaluation-context'
 
 /**
  * Token types for expression parsing
  */
-type TokenType = 'IDENTIFIER' | 'DOT' | 'LPAREN' | 'RPAREN' | 'STRING' | 'COMMA' | 'EOF' | 'UNKNOWN'
+type TokenType =
+    | 'IDENTIFIER'
+    | 'DOT'
+    | 'LPAREN'
+    | 'RPAREN'
+    | 'STRING'
+    | 'NUMBER'
+    | 'COMMA'
+    | 'EOF'
+    | 'UNKNOWN'
 
 interface Token {
     type: TokenType
@@ -107,6 +126,29 @@ function tokenize(expression: string): Token[] {
             continue
         }
 
+        // Number literal (including negative numbers and decimals)
+        if (
+            /[0-9]/.test(char) ||
+            (char === '-' && i + 1 < expression.length && /[0-9]/.test(expression[i + 1] ?? ''))
+        ) {
+            let num = ''
+            if (char === '-') {
+                num += char
+                i++
+            }
+            while (i < expression.length) {
+                const c = expression[i]
+                if (c && /[0-9.]/.test(c)) {
+                    num += c
+                    i++
+                } else {
+                    break
+                }
+            }
+            tokens.push({ type: 'NUMBER', value: num })
+            continue
+        }
+
         // Identifier (function name or property)
         if (/[a-zA-Z_]/.test(char)) {
             let name = ''
@@ -178,7 +220,7 @@ function parseExpression(tokens: Token[], context?: EvaluationContext): Expressi
                         break
                     }
 
-                    if (argToken.type === 'STRING') {
+                    if (argToken.type === 'STRING' || argToken.type === 'NUMBER') {
                         args.push(argToken.value)
                         pos++
 
@@ -273,7 +315,7 @@ function resolveFileFieldValue(
     }
 }
 
-type EvaluationResult = DateValue | StringValue | string
+type EvaluationResult = DateValue | StringValue | NumberValue | string | boolean | string[]
 
 /**
  * Evaluate a parsed expression chain
@@ -317,21 +359,16 @@ function evaluateExpression(
             const args = element.type === 'function' ? element.args : []
 
             if (result instanceof DateValue) {
-                switch (name) {
-                    case 'format':
-                        result = result.format(args[0] ?? 'YYYY-MM-DD')
-                        break
-                    default:
-                        // Convert to string and apply string method
-                        result = createString(result.toString())
-                        result = applyStringMethod(result, name, args)
-                }
+                result = applyDateMethod(result, name, args)
+            } else if (result instanceof NumberValue) {
+                result = applyNumberMethod(result, name, args)
             } else if (result instanceof StringValue) {
                 result = applyStringMethod(result, name, args)
             } else if (typeof result === 'string') {
                 result = createString(result)
                 result = applyStringMethod(result, name, args)
             }
+            // booleans don't have chainable methods
         }
     }
 
@@ -368,6 +405,7 @@ function resolveFileField(
  */
 function evaluateInitialFunction(name: string, args: string[]): EvaluationResult {
     switch (name) {
+        // Date functions
         case 'now':
             return createNow()
         case 'today':
@@ -378,6 +416,8 @@ function evaluateInitialFunction(name: string, args: string[]): EvaluationResult
             // Return the parsed date or a string error indicator
             return parsed ?? createString('')
         }
+
+        // String functions
         case 'upper':
             return createString(args[0] ?? '').upper()
         case 'lower':
@@ -386,12 +426,72 @@ function evaluateInitialFunction(name: string, args: string[]): EvaluationResult
             return createString(args[0] ?? '').trim()
         case 'replace':
             return createString(args[0] ?? '').replace(args[1] ?? '', args[2] ?? '')
+        case 'title':
+            return createString(args[0] ?? '').title()
+
+        // Number functions
+        case 'number':
+            return parseNumber(args[0] ?? '0')
+        case 'min': {
+            const nums = args.map((a) => parseFloat(a))
+            return minValue(...nums)
+        }
+        case 'max': {
+            const nums = args.map((a) => parseFloat(a))
+            return maxValue(...nums)
+        }
+
+        // Conditional function
+        case 'if': {
+            // args[0] = condition (truthy check)
+            // args[1] = true result
+            // args[2] = false result (optional, defaults to '')
+            const condition = args[0] ?? ''
+            const isTruthy = evaluateTruthiness(condition)
+            return createString(isTruthy ? (args[1] ?? '') : (args[2] ?? ''))
+        }
+
+        // Utility functions
+        case 'escapeHTML':
+            return createString(escapeHTML(args[0] ?? ''))
+
         default:
             return createString('')
     }
 }
 
-function applyStringMethod(value: StringValue, name: string, args: string[]): StringValue {
+/**
+ * Evaluate truthiness of a string value
+ * Falsy values: empty string, "false", "0", "null", "undefined"
+ */
+function evaluateTruthiness(value: string): boolean {
+    const trimmed = value.trim().toLowerCase()
+    return (
+        trimmed !== '' &&
+        trimmed !== 'false' &&
+        trimmed !== '0' &&
+        trimmed !== 'null' &&
+        trimmed !== 'undefined'
+    )
+}
+
+/**
+ * Escape HTML special characters
+ */
+function escapeHTML(str: string): string {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+}
+
+function applyStringMethod(
+    value: StringValue,
+    name: string,
+    args: string[]
+): StringValue | boolean | string[] {
     switch (name) {
         case 'lower':
             return value.lower()
@@ -401,11 +501,89 @@ function applyStringMethod(value: StringValue, name: string, args: string[]): St
             return value.trim()
         case 'replace':
             return value.replace(args[0] ?? '', args[1] ?? '')
+        case 'title':
+            return value.title()
+        case 'slice': {
+            const start = parseInt(args[0] ?? '0', 10)
+            const end = args[1] ? parseInt(args[1], 10) : undefined
+            return value.slice(start, end)
+        }
+        case 'repeat': {
+            const count = parseInt(args[0] ?? '1', 10)
+            return value.repeat(count)
+        }
+        case 'startsWith':
+            return value.startsWith(args[0] ?? '')
+        case 'endsWith':
+            return value.endsWith(args[0] ?? '')
+        case 'contains':
+            return value.contains(args[0] ?? '')
+        case 'containsAll':
+            return value.containsAll(...args)
+        case 'containsAny':
+            return value.containsAny(...args)
+        case 'isEmpty':
+            return value.isEmpty()
+        case 'reverse':
+            return value.reverse()
+        case 'split': {
+            const sep = args[0] ?? ''
+            const limit = args[1] ? parseInt(args[1], 10) : undefined
+            return value.split(sep, limit)
+        }
         case 'format':
             // String format is a no-op, already a string
             return value
         default:
             return value
+    }
+}
+
+/**
+ * Apply a method to a DateValue
+ */
+function applyDateMethod(value: DateValue, name: string, args: string[]): EvaluationResult {
+    switch (name) {
+        case 'format':
+            return value.format(args[0] ?? 'YYYY-MM-DD')
+        case 'date':
+            return value.dateOnly()
+        case 'time':
+            return value.time()
+        case 'relative':
+            return value.relative()
+        case 'isEmpty':
+            return value.isEmpty()
+        default:
+            // Convert to string and apply string method
+            return applyStringMethod(createString(value.toString()), name, args)
+    }
+}
+
+/**
+ * Apply a method to a NumberValue
+ */
+function applyNumberMethod(value: NumberValue, name: string, args: string[]): EvaluationResult {
+    switch (name) {
+        case 'abs':
+            return value.abs()
+        case 'ceil':
+            return value.ceil()
+        case 'floor':
+            return value.floor()
+        case 'round': {
+            const digits = args[0] ? parseInt(args[0], 10) : 0
+            return value.round(digits)
+        }
+        case 'toFixed': {
+            const precision = parseInt(args[0] ?? '0', 10)
+            return value.toFixed(precision)
+        }
+        case 'isEmpty':
+            return value.isEmpty()
+        default:
+            // Convert to string and apply string method
+            return applyStringMethod(createString(value.toString()), name, args)
     }
 }
 
@@ -433,11 +611,24 @@ export function evaluateValue(value: string, context?: EvaluationContext): strin
         const tokens = tokenize(value)
         const elements = parseExpression(tokens, context)
         const result = evaluateExpression(elements, context)
-        return result.toString()
+        return resultToString(result)
     } catch (error) {
         log(`Error evaluating expression: ${value}`, 'error', error)
         return value // Return original value on error
     }
+}
+
+/**
+ * Convert an evaluation result to a string
+ */
+function resultToString(result: EvaluationResult): string {
+    if (typeof result === 'boolean') {
+        return result ? 'true' : 'false'
+    }
+    if (Array.isArray(result)) {
+        return result.join(', ')
+    }
+    return result.toString()
 }
 
 // Keep old function name as alias for backwards compatibility

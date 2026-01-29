@@ -166,6 +166,57 @@ describe('DateValue', () => {
         const dv = new DateValue(testDate)
         expect(dv.toString()).toBe(testDate.toISOString())
     })
+
+    describe('dateOnly()', () => {
+        test('removes time component', () => {
+            const dv = new DateValue(testDate)
+            const dateOnly = dv.dateOnly()
+            const result = dateOnly.toDate()
+            expect(result.getUTCHours()).toBe(0)
+            expect(result.getUTCMinutes()).toBe(0)
+            expect(result.getUTCSeconds()).toBe(0)
+        })
+
+        test('preserves date components', () => {
+            const dv = new DateValue(testDate)
+            const dateOnly = dv.dateOnly()
+            expect(dateOnly.format('YYYY-MM-DD')).toBe('2024-06-20')
+        })
+    })
+
+    describe('time()', () => {
+        test('extracts time as HH:mm:ss string', () => {
+            // Use a date with known local time to avoid timezone issues
+            const localDate = new Date(2024, 5, 20, 14, 30, 45)
+            const dv = new DateValue(localDate)
+            expect(dv.time()).toBe('14:30:45')
+        })
+    })
+
+    describe('relative()', () => {
+        test('returns relative time string', () => {
+            // Create a date in the past
+            const pastDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
+            const dv = new DateValue(pastDate)
+            const result = dv.relative()
+            expect(result).toContain('ago')
+        })
+
+        test('returns future relative time', () => {
+            // Create a date in the future
+            const futureDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days from now
+            const dv = new DateValue(futureDate)
+            const result = dv.relative()
+            expect(result).toContain('in')
+        })
+    })
+
+    describe('isEmpty()', () => {
+        test('always returns false for valid DateValue', () => {
+            const dv = new DateValue(testDate)
+            expect(dv.isEmpty()).toBe(false)
+        })
+    })
 })
 
 describe('createNow()', () => {
