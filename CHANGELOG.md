@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0](https://github.com/dsebastien/obsidian-expander/compare/0.0.2...0.1.0) (2026-01-30)
+
+### Features
+
+* **all:** updated ([c60ff04](https://github.com/dsebastien/obsidian-expander/commit/c60ff0466aab7be7616f82e398f713da0e767c03))
+* **all:** updated release ([5ab90ca](https://github.com/dsebastien/obsidian-expander/commit/5ab90ca443b8b13953afc90ac93c406595312069))
+
 ## [0.0.2](https://github.com/dsebastien/obsidian-expander/compare/0.0.1...0.0.2) (2026-01-30)
 
 ### Features
@@ -23,4 +30,5 @@ All notable changes to this project will be documented in this file.
 * **all:** improved settings handling (prevent saving invalid duplicate keys) ([9b3c9c8](https://github.com/dsebastien/obsidian-expander/commit/9b3c9c8624a4eef00f680997e1eaf7c3e0e62b29))
 * **all:** improves functions ([2fb96d6](https://github.com/dsebastien/obsidian-expander/commit/2fb96d6678be750d73cf8259c8b013495f72421a))
 * **all:** shortened the syntax ([fab6429](https://github.com/dsebastien/obsidian-expander/commit/fab6429a581eb956597d00f935f2be99fce313c0))
+
 
