@@ -1,3 +1,9 @@
+---
+title: Overview
+nav_order: 1
+permalink: /
+---
+
 # Expander
 
 Replace variables across your vault using HTML comment markers. Configure key-value pairs in settings, and Expander will automatically substitute them throughout your notes.

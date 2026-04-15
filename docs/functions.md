@@ -1,3 +1,8 @@
+---
+title: Functions
+nav_order: 10
+---
+
 # Functions
 
 Expander supports function expressions for dynamic values. Functions can be chained together.
