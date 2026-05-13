@@ -1,9 +1,11 @@
----
-title: Release notes
-nav_order: 98
----
-
 # Release Notes
+
+## 0.2.0 (2026-05-13)
+
+### Features
+
+- **all:** improved release notes gen
+- **all:** updated scripts
 
 ## 0.1.0 (2026-01-30)
 
