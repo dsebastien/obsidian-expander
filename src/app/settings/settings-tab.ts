@@ -2,6 +2,7 @@ import { App, PluginSettingTab, SearchComponent, Setting } from 'obsidian'
 import type { ExpanderPlugin } from '../plugin'
 import { renderReplacementList } from './components/replacement-list'
 import { FolderSuggest } from '../utils/folder-suggest'
+import { BUY_ME_A_COFFEE_BADGE_DATA_URL } from '../assets/buy-me-a-coffee'
 
 /**
  * Settings tab for the Expander plugin
@@ -168,9 +169,7 @@ export class ExpanderSettingTab extends PluginSettingTab {
                     .onClick(() => {
                         // Execute the vault command
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        ;(this.app as any).commands.executeCommandById(
-                            'obsidian-expander:replace-vault'
-                        )
+                        ;(this.app as any).commands.executeCommandById('expander:replace-vault')
                     })
             })
     }
@@ -205,8 +204,7 @@ export class ExpanderSettingTab extends PluginSettingTab {
             href: 'https://www.buymeacoffee.com/dsebastien'
         })
         const imgEl = linkEl.createEl('img')
-        imgEl.src =
-            'https://github.com/dsebastien/obsidian-plugin-template/blob/main/src/assets/buy-me-a-coffee.png?raw=true'
+        imgEl.src = BUY_ME_A_COFFEE_BADGE_DATA_URL
         imgEl.alt = 'Buy me a coffee'
         imgEl.width = width
     }

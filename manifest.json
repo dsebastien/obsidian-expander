@@ -1,5 +1,5 @@
 {
-    "id": "obsidian-expander",
+    "id": "expander",
     "name": "Expander",
     "description": "Replace variables across your vault using HTML comment markers. Supports static values and dynamic functions.",
     "version": "0.1.0",
