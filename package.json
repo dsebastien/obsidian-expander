@@ -29,7 +29,7 @@
         "npm": ">=10.1.0"
     },
     "main": "main.js",
-    "packageManager": "bun@1.3.2",
+    "packageManager": "bun@1.3.14",
     "config": {
         "commitizen": {
             "path": "node_modules/cz-customizable"
@@ -78,6 +78,8 @@
         "typescript-eslint": "8.48.1"
     },
     "dependencies": {
+        "@codemirror/state": "^6.5.2",
+        "@codemirror/view": "^6.36.7",
         "date-fns": "4.1.0",
         "immer": "11.0.1",
         "zod": "^4.1.13"

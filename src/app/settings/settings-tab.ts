@@ -19,10 +19,6 @@ export class ExpanderSettingTab extends PluginSettingTab {
         const { containerEl } = this
         containerEl.empty()
 
-        // Header
-        containerEl.createEl('h2', { text: 'Expander Settings' })
-
-        // Replacement definitions
         const replacementContainer = containerEl.createDiv({ cls: 'exp-settings-section' })
         renderReplacementList({
             containerEl: replacementContainer,
@@ -56,7 +52,7 @@ export class ExpanderSettingTab extends PluginSettingTab {
     }
 
     private renderFolderSettings(containerEl: HTMLElement): void {
-        new Setting(containerEl).setName('Folder settings').setHeading()
+        new Setting(containerEl).setName('Folder scanning').setHeading()
 
         this.renderFolderList({
             containerEl,
@@ -118,14 +114,14 @@ export class ExpanderSettingTab extends PluginSettingTab {
                 })
             })
 
-        currentList.forEach((folder) =>
+        currentList.forEach((folder) => {
             new Setting(containerEl).setName(folder).addButton((button) =>
                 button.setButtonText('Remove').onClick(() => {
                     setValue(currentList.filter((f) => f !== folder))
                     this.display()
                 })
             )
-        )
+        })
     }
 
     private renderBehaviorSettings(containerEl: HTMLElement): void {
@@ -167,9 +163,10 @@ export class ExpanderSettingTab extends PluginSettingTab {
                     .setButtonText('Replace values')
                     .setCta()
                     .onClick(() => {
-                        // Execute the vault command
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        ;(this.app as any).commands.executeCommandById('expander:replace-vault')
+                        const app = this.app as unknown as {
+                            commands: { executeCommandById: (id: string) => boolean }
+                        }
+                        app.commands.executeCommandById('expander:replace-vault')
                     })
             })
     }

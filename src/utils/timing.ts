@@ -19,17 +19,17 @@ export function debounce<Args extends unknown[]>(
     fn: (...args: Args) => void,
     delay: number
 ): DebouncedFunction<Args> {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let timeoutId: number | null = null
     let lastArgs: Args | null = null
 
     const debouncedFn = (...args: Args): void => {
         lastArgs = args
 
         if (timeoutId !== null) {
-            clearTimeout(timeoutId)
+            window.clearTimeout(timeoutId)
         }
 
-        timeoutId = setTimeout(() => {
+        timeoutId = window.setTimeout(() => {
             if (lastArgs !== null) {
                 fn(...lastArgs)
             }
@@ -40,7 +40,7 @@ export function debounce<Args extends unknown[]>(
 
     debouncedFn.cancel = (): void => {
         if (timeoutId !== null) {
-            clearTimeout(timeoutId)
+            window.clearTimeout(timeoutId)
             timeoutId = null
         }
         lastArgs = null
@@ -48,7 +48,7 @@ export function debounce<Args extends unknown[]>(
 
     debouncedFn.flush = (): void => {
         if (timeoutId !== null) {
-            clearTimeout(timeoutId)
+            window.clearTimeout(timeoutId)
             timeoutId = null
             if (lastArgs !== null) {
                 fn(...lastArgs)
@@ -73,7 +73,7 @@ export function throttle<Args extends unknown[]>(
     interval: number
 ): (...args: Args) => void {
     let lastCall = 0
-    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    let timeoutId: number | null = null
 
     return (...args: Args): void => {
         const now = Date.now()
@@ -81,13 +81,13 @@ export function throttle<Args extends unknown[]>(
 
         if (remaining <= 0) {
             if (timeoutId !== null) {
-                clearTimeout(timeoutId)
+                window.clearTimeout(timeoutId)
                 timeoutId = null
             }
             lastCall = now
             fn(...args)
         } else if (timeoutId === null) {
-            timeoutId = setTimeout(() => {
+            timeoutId = window.setTimeout(() => {
                 lastCall = Date.now()
                 timeoutId = null
                 fn(...args)

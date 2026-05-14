@@ -188,7 +188,7 @@ function formatYamlValue(value: string): string {
 /**
  * Get a property value from frontmatter
  */
-export function getFrontmatterProperty(content: string, propertyName: string): unknown | undefined {
+export function getFrontmatterProperty(content: string, propertyName: string): unknown {
     const parsed = parseFrontmatter(content)
     if (!parsed) {
         return undefined
