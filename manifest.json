@@ -2,7 +2,7 @@
     "id": "expander",
     "name": "Expander",
     "description": "Replace variables across your vault using HTML comment markers. Supports static values and dynamic functions.",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "minAppVersion": "1.4.10",
     "isDesktopOnly": false,
     "author": "Sébastien Dubois",
