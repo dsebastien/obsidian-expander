@@ -14,6 +14,7 @@ Replace variables across your Obsidian vault using HTML comment markers. Configu
 - **Folder Filtering**: Choose which folders to scan or ignore
 - **Visual Feedback**: Mode badges and refresh buttons in the editor
 - **Commands**: Replace values in current note or entire vault, add new expansion, ...
+- **What's new after updates.** After a plugin update, a one-time dialog shows the release notes you just received (including skipped versions) with ways to support development. Never shown on fresh installs or regular restarts.
 
 ## Installation
 
