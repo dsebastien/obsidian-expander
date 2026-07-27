@@ -1,6 +1,6 @@
 {
     "name": "expander",
-    "version": "0.2.3",
+    "version": "0.3.0",
     "description": "Replace variables across your vault using HTML comment markers. Supports static values and dynamic functions.",
     "author": {
         "name": "Sébastien Dubois",
