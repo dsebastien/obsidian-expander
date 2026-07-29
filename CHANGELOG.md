@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/dsebastien/obsidian-expander/compare/0.3.0...0.4.0) (2026-07-29)
+
+### Features
+
+* **plugin:** add Knowii community to the what's new dialog and harden it ([659a07f](https://github.com/dsebastien/obsidian-expander/commit/659a07fa729f52a39e1c159ad288c20acdd70c2b))
+* **plugin:** add Knowii community to the what's new dialog and harden it ([7b47f11](https://github.com/dsebastien/obsidian-expander/commit/7b47f1120e5c92e08d75de35d4edbf2b14aa80a5))
+
 ## [0.3.0](https://github.com/dsebastien/obsidian-expander/compare/0.2.3...0.3.0) (2026-07-27)
 
 ### Features
@@ -49,6 +56,7 @@ All notable changes to this project will be documented in this file.
 * **all:** improved settings handling (prevent saving invalid duplicate keys) ([9b3c9c8](https://github.com/dsebastien/obsidian-expander/commit/9b3c9c8624a4eef00f680997e1eaf7c3e0e62b29))
 * **all:** improves functions ([2fb96d6](https://github.com/dsebastien/obsidian-expander/commit/2fb96d6678be750d73cf8259c8b013495f72421a))
 * **all:** shortened the syntax ([fab6429](https://github.com/dsebastien/obsidian-expander/commit/fab6429a581eb956597d00f935f2be99fce313c0))
+
 
 
 
