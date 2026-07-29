@@ -3,6 +3,7 @@ import type { ExpanderPlugin } from '../plugin'
 import { renderReplacementList } from './components/replacement-list'
 import { FolderSuggest } from '../utils/folder-suggest'
 import { BUY_ME_A_COFFEE_BADGE_DATA_URL } from '../assets/buy-me-a-coffee'
+import { renderSupportSection } from '../ui/support-links'
 
 /**
  * Settings tab for the Expander plugin
@@ -172,28 +173,9 @@ export class ExpanderSettingTab extends PluginSettingTab {
     }
 
     private renderSupportSection(containerEl: HTMLElement): void {
-        new Setting(containerEl).setName('Support').setHeading()
-
-        new Setting(containerEl)
-            .setName('Follow me on X')
-            .setDesc('Sébastien Dubois (@dSebastien)')
-            .addButton((button) => {
-                button.setCta()
-                button.setButtonText('Follow me on X').onClick(() => {
-                    window.open('https://x.com/dSebastien')
-                })
-            })
-
-        const supportDesc = new DocumentFragment()
-        supportDesc.createDiv({
-            text: 'Buy me a coffee to support the development of this plugin'
+        renderSupportSection(containerEl, (el) => {
+            this.renderBuyMeACoffeeBadge(el)
         })
-
-        new Setting(containerEl).setDesc(supportDesc)
-
-        this.renderBuyMeACoffeeBadge(containerEl)
-        const spacing = containerEl.createDiv()
-        spacing.classList.add('support-header-margin')
     }
 
     private renderBuyMeACoffeeBadge(contentEl: HTMLElement | DocumentFragment, width = 175): void {
