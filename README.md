@@ -98,25 +98,29 @@ Full documentation available at [docs/](docs/README.md).
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for build instructions, testing setup, and contribution guidelines.
 
-## Support
-
-If you find this plugin useful, consider supporting my work:
-
-- [GitHub Sponsors](https://github.com/sponsors/dsebastien)
-- [Buy me a coffee](https://www.buymeacoffee.com/dsebastien)
-- [Check out my products](https://store.dsebastien.net)
-
 ## License
 
 MIT License - see [LICENSE](./LICENSE) for details.
 
-## News & Updates
+## Author
+
+Created by [Sébastien Dubois](https://dsebastien.net) ([@dSebastien](https://x.com/dSebastien))
+
+<!-- support-cta -->
+## News & support
 
 To stay up to date about this plugin, Obsidian in general, Personal Knowledge Management and note-taking:
 
 - Subscribe to [my newsletter](https://dsebastien.net/newsletter)
-- Follow me on [X/Twitter](https://x.com/dSebastien)
+- Subscribe to [my YouTube channel](https://youtube.com/@dsebastien)
+- Join the [Knowii community](https://www.store.dsebastien.net/product/knowii-community/) and learn to organize your notes and put your knowledge to work, together with fellow knowledge workers
 
-## Author
+If this plugin is useful to you, here are the best ways to support my work ❤️:
 
-Created by [Sébastien Dubois](https://dsebastien.net) ([@dSebastien](https://x.com/dSebastien))
+- [Join the Knowii community](https://www.store.dsebastien.net/product/knowii-community/)
+- [Become a GitHub Sponsor](https://github.com/sponsors/dsebastien)
+- [Buy me a coffee](https://www.buymeacoffee.com/dsebastien)
+- [Subscribe to my YouTube channel](https://youtube.com/@dsebastien)
+- [Check out my products](https://store.dsebastien.net)
+
+Found a bug or have an idea? [Open an issue](https://github.com/dsebastien/obsidian-expander/issues).
