@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/dsebastien/obsidian-expander/compare/0.4.0...0.5.0) (2026-07-29)
+
+### Features
+
+* **plugin:** aggregate what's new dialogs across simultaneously updated plugins ([9ba0fbb](https://github.com/dsebastien/obsidian-expander/commit/9ba0fbb96b5b84cff83e7366177594e3c5e4b616))
+
 ## [0.4.0](https://github.com/dsebastien/obsidian-expander/compare/0.3.0...0.4.0) (2026-07-29)
 
 ### Features
@@ -56,6 +62,7 @@ All notable changes to this project will be documented in this file.
 * **all:** improved settings handling (prevent saving invalid duplicate keys) ([9b3c9c8](https://github.com/dsebastien/obsidian-expander/commit/9b3c9c8624a4eef00f680997e1eaf7c3e0e62b29))
 * **all:** improves functions ([2fb96d6](https://github.com/dsebastien/obsidian-expander/commit/2fb96d6678be750d73cf8259c8b013495f72421a))
 * **all:** shortened the syntax ([fab6429](https://github.com/dsebastien/obsidian-expander/commit/fab6429a581eb956597d00f935f2be99fce313c0))
+
 
 
 
