@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0](https://github.com/dsebastien/obsidian-expander/compare/0.5.0...1.0.0) (2026-08-28)
+
+### ⚠ BREAKING CHANGES
+
+* **plugin:** minAppVersion is now 1.13.0 (was 1.8.7). The settings pane
+uses the declarative settings API introduced in Obsidian 1.13.
+
+- getSettingDefinitions() replaces display(): 2 toggles as declared controls,
+  the 2 folder lists as native type 'list' groups (framework delete resolving
+  entries BY VALUE from the live array; the add control keeps its inline
+  FolderSuggest search box), the vault-wide replace action and the support
+  block as render: rows, everything indexed by the settings search.
+- The replacements editor deliberately keeps its draft-plus-Save semantics
+  inside a render: row: replacement keys are live the moment they are stored,
+  so persisting every keystroke would let a half-typed key match and expand
+  text in notes. The Save button now reports success only after the write
+  lands, and a failed persist keeps the draft dirty so Save can retry.
+- updateSettings becomes the serialized persist-then-commit write path from
+  the template: memory is swapped only after saveData() succeeds, and queued
+  writes each derive from the previously committed state so overlapping edits
+  cannot drop each other. saveSettings is documented as load-time-only.
+- Support block and replacements editor rows get block layout via an
+  unlayered .setting-item.exp-settings-embed rule (Obsidian's own flex-row
+  rule is unlayered, and unlayered CSS beats layered CSS regardless of
+  specificity).
+- Tests: settings-guard.spec.ts (source-level guard for the two known-fatal
+  render patterns) and settings-write.spec.ts (13 behavioral tests: queue,
+  rollback, validation, folder-list races; mutation-checked against an
+  optimistic commit and an unserialized chain — 3 tests fail under each).
+- Docs: README and docs/configuration.md state the 1.13 requirement;
+  AGENTS.md gains the declarative-settings section including the
+  draft-plus-Save exception.
+
+### Features
+
+* **plugin:** declare the settings tab (Obsidian 1.13 declarative settings) ([adaeb41](https://github.com/dsebastien/obsidian-expander/commit/adaeb4173a9bad0be4fec364fdcef40f95f9614b))
+* **plugin:** show what's new in a tab instead of a modal dialog ([e0c5a18](https://github.com/dsebastien/obsidian-expander/commit/e0c5a180bf3c62515f33607582d9d3683a3a278c))
+* **plugin:** surface support CTAs everywhere users can see them ([2ee15ac](https://github.com/dsebastien/obsidian-expander/commit/2ee15acb13f377167879a06f7145a54d1b89ad4d))
+
+### Bug Fixes
+
+* **build:** align with the catalog reviewer's archive, ruleset and audit ([f7fef46](https://github.com/dsebastien/obsidian-expander/commit/f7fef461758d071348d3822ddb0ce33be669f4a6))
+* **plugin:** harden the settings write paths after adversarial review ([1578ef8](https://github.com/dsebastien/obsidian-expander/commit/1578ef8aab9c689230c33e9bd21cb221fc6cb6c2))
+
 ## [0.5.0](https://github.com/dsebastien/obsidian-expander/compare/0.4.0...0.5.0) (2026-07-29)
 
 ### Features
@@ -62,6 +106,7 @@ All notable changes to this project will be documented in this file.
 * **all:** improved settings handling (prevent saving invalid duplicate keys) ([9b3c9c8](https://github.com/dsebastien/obsidian-expander/commit/9b3c9c8624a4eef00f680997e1eaf7c3e0e62b29))
 * **all:** improves functions ([2fb96d6](https://github.com/dsebastien/obsidian-expander/commit/2fb96d6678be750d73cf8259c8b013495f72421a))
 * **all:** shortened the syntax ([fab6429](https://github.com/dsebastien/obsidian-expander/commit/fab6429a581eb956597d00f935f2be99fce313c0))
+
 
 
 
