@@ -492,8 +492,6 @@ convert it to immediate per-change writes.
   open the settings pane in a real vault before calling it done — flag it for
   manual verification per the "No UI self-verification" rule.
 
-
-
 ## Community catalog review — preventative rules
 
 The community-plugin reviewer runs a fixed set of lint rules against every submitted release. Most warnings repeat across plugins and have known idiomatic fixes. **Apply these patterns from day one** — fixing them retroactively is much more expensive than getting them right the first time.

@@ -279,9 +279,7 @@ describe('replacement list writes', () => {
         release()
         await pending
 
-        expect(plugin.settings.replacements).toEqual([
-            { key: 'today', value: 'x', enabled: true }
-        ])
+        expect(plugin.settings.replacements).toEqual([{ key: 'today', value: 'x', enabled: true }])
         expect(Object.isFrozen(draftItem)).toBe(false)
     })
 })
