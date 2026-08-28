@@ -5,6 +5,10 @@ nav_order: 3
 
 # Configuration
 
+> Requires Obsidian 1.13.0 or later: the settings pane uses the declarative
+> settings API, which also makes every setting findable through Obsidian's
+> settings search.
+
 ## Replacement Definitions
 
 The core of Expander is the list of key-value pairs you define.

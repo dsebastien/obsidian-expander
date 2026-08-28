@@ -10,7 +10,12 @@ import { isPropertyKey, getPropertyName } from '../../../utils/frontmatter'
 interface ReplacementListProps {
     containerEl: HTMLElement
     replacements: Replacement[]
-    onSave: (replacements: Replacement[]) => void
+    /**
+     * Persists the list. Resolves when the write has landed; rejects when it
+     * has not — the Save button reports success only on resolution, so the
+     * "Settings saved" notice can never announce a write that failed.
+     */
+    onSave: (replacements: Replacement[]) => Promise<void>
     onStructuralChange: (replacements: Replacement[]) => void
 }
 
@@ -117,11 +122,19 @@ export function renderReplacementList(props: ReplacementListProps): void {
         saveButtonEl = button.buttonEl
         button.setButtonText('Save').onClick(() => {
             const isValid = validateReplacements(localReplacements)
-            if (hasUnsavedChanges && isValid) {
-                onSave(localReplacements)
-                markClean()
-                new Notice('Settings saved')
+            if (!hasUnsavedChanges || !isValid) {
+                return
             }
+            // Mark clean only after the write lands; a failed persist keeps
+            // the draft dirty so Save stays available to retry.
+            void onSave(localReplacements)
+                .then(() => {
+                    markClean()
+                    new Notice('Settings saved')
+                })
+                .catch(() => {
+                    new Notice('Failed to save settings.')
+                })
         })
         // Initially disabled
         button.buttonEl.disabled = true

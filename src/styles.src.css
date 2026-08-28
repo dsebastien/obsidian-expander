@@ -13,6 +13,17 @@
    EXPANDER SETTINGS UI
    ======================================== */
 
+/*
+ * Rows hosting an embedded block (the replacements editor, the support
+ * section). `.setting-item` is a flex ROW in Obsidian's own stylesheet, which
+ * is UNLAYERED — and unlayered CSS beats layered CSS regardless of
+ * specificity. This rule must therefore stay outside any @layer, and the
+ * compound selector outranks the app rule at equal layer.
+ */
+.setting-item.exp-settings-embed {
+    display: block;
+}
+
 .exp-settings-section {
     @apply mb-6;
 }
