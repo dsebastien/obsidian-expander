@@ -16,7 +16,13 @@ interface ReplacementListProps {
      * "Settings saved" notice can never announce a write that failed.
      */
     onSave: (replacements: Replacement[]) => Promise<void>
-    onStructuralChange: (replacements: Replacement[]) => void
+    /**
+     * Persists a structural edit (add/delete/move) and re-renders the editor.
+     * Resolves after the write lands and the re-render is requested; rejects
+     * when the write fails — the editor then keeps the current draft on
+     * screen and releases its latch so the action can be retried.
+     */
+    onStructuralChange: (replacements: Replacement[]) => Promise<void>
 }
 
 /**
@@ -64,6 +70,22 @@ export function renderReplacementList(props: ReplacementListProps): void {
     const localReplacements = cloneReplacements(replacements)
     let hasUnsavedChanges = false
 
+    // Counts edits; the Save handler captures it at click time so a keystroke
+    // made while the write is in flight is not wrongly marked clean.
+    let dirtyGeneration = 0
+
+    // One save at a time: double-clicking a slow Save must not queue a second
+    // write and a second (possibly contradictory) notice.
+    let saveInFlight = false
+
+    // One structural write at a time. Each structural action persists a
+    // whole-list snapshot and the pane re-renders only after the write lands,
+    // so a second action started from the still-visible OLD rows would write
+    // a stale list (e.g. resurrecting an entry a pending delete removed).
+    // The latch drops on failure; on success the re-render replaces the
+    // whole editor anyway.
+    let structuralActionPending = false
+
     // Track the save button for enabling/disabling
     let saveButtonEl: HTMLButtonElement | null = null
 
@@ -75,7 +97,7 @@ export function renderReplacementList(props: ReplacementListProps): void {
 
         const isValid = validateReplacements(localReplacements)
 
-        if (hasUnsavedChanges && isValid) {
+        if (hasUnsavedChanges && isValid && !saveInFlight) {
             saveButtonEl.disabled = false
             saveButtonEl.classList.add('mod-cta')
         } else {
@@ -86,12 +108,28 @@ export function renderReplacementList(props: ReplacementListProps): void {
 
     const markDirty = (): void => {
         hasUnsavedChanges = true
+        dirtyGeneration += 1
         updateSaveButtonState()
     }
 
     const markClean = (): void => {
         hasUnsavedChanges = false
         updateSaveButtonState()
+    }
+
+    /**
+     * Persist a structural edit (add/delete/move). Serialized by the latch;
+     * on failure the draft stays on screen and the action can be retried.
+     */
+    const requestStructuralChange = (updated: Replacement[]): void => {
+        if (structuralActionPending) {
+            return
+        }
+        structuralActionPending = true
+        void onStructuralChange(updated).catch(() => {
+            structuralActionPending = false
+            new Notice('Failed to save settings.')
+        })
     }
 
     // Header
@@ -114,7 +152,7 @@ export function renderReplacementList(props: ReplacementListProps): void {
                 value: '',
                 enabled: true
             }
-            onStructuralChange([...localReplacements, newReplacement])
+            requestStructuralChange([...localReplacements, newReplacement])
         })
     })
 
@@ -122,18 +160,31 @@ export function renderReplacementList(props: ReplacementListProps): void {
         saveButtonEl = button.buttonEl
         button.setButtonText('Save').onClick(() => {
             const isValid = validateReplacements(localReplacements)
-            if (!hasUnsavedChanges || !isValid) {
+            if (!hasUnsavedChanges || !isValid || saveInFlight) {
                 return
             }
+            saveInFlight = true
+            updateSaveButtonState()
+            // The generation captured here decides whether the draft may be
+            // marked clean afterwards: a keystroke made while the write was
+            // in flight was not part of the persisted snapshot and must keep
+            // the draft dirty.
+            const savedGeneration = dirtyGeneration
             // Mark clean only after the write lands; a failed persist keeps
             // the draft dirty so Save stays available to retry.
             void onSave(localReplacements)
                 .then(() => {
-                    markClean()
+                    if (dirtyGeneration === savedGeneration) {
+                        markClean()
+                    }
                     new Notice('Settings saved')
                 })
                 .catch(() => {
                     new Notice('Failed to save settings.')
+                })
+                .finally(() => {
+                    saveInFlight = false
+                    updateSaveButtonState()
                 })
         })
         // Initially disabled
@@ -153,7 +204,8 @@ export function renderReplacementList(props: ReplacementListProps): void {
             index: i,
             allReplacements: localReplacements,
             onFieldChange: markDirty,
-            onStructuralChange
+            // Item rows route structural edits through the latch too.
+            onStructuralChange: requestStructuralChange
         })
     }
 }

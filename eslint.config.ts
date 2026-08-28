@@ -94,13 +94,19 @@ export default defineConfig([
                         'Sébastien Dubois',
                         'dSebastien'
                     ],
-                    // Double-quoted fragments inside UI strings are verbatim
-                    // values (e.g. the "YYYY-MM-DD" format literal in the value
-                    // placeholder), not prose — same escape as the
-                    // dataview-serializer port. `^my-key$` excuses the
-                    // replacement-key placeholder, which demonstrates the
-                    // required kebab-case format and must stay lowercase.
-                    ignoreRegex: ['"[^"]+"', '^my-key$']
+                    // A matching regex exempts the ENTIRE string
+                    // (shouldIgnoreByRegex runs regex.test on the whole text),
+                    // so every pattern here is anchored to the one literal it
+                    // excuses — an unanchored fragment like '"[^"]+"' would
+                    // silently exempt any UI string containing quoted text.
+                    // `^my-key$`: the replacement-key placeholder demonstrates
+                    // the required kebab-case format and must stay lowercase.
+                    // The other is the value placeholder with its verbatim
+                    // "YYYY-MM-DD" format literal.
+                    ignoreRegex: [
+                        '^my-key$',
+                        '^Static value or now\\(\\)\\.format\\("YYYY-MM-DD"\\)$'
+                    ]
                 }
             ]
         }
@@ -114,15 +120,6 @@ export default defineConfig([
         files: ['**/*.spec.ts'],
         rules: {
             'obsidianmd/no-tfile-tfolder-cast': 'off'
-        }
-    },
-    {
-        // The logger is the one place console access is the point. Everywhere
-        // else `no-console` still applies, which is what keeps stray debugging
-        // out of the shipped plugin.
-        files: ['src/utils/log.ts'],
-        rules: {
-            'no-console': 'off'
         }
     }
 ])

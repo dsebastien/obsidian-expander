@@ -254,6 +254,36 @@ describe('replacement list writes', () => {
 
         expect(plugin.settings.replacements).toEqual(DEFAULT_SETTINGS.replacements)
     })
+
+    test('the list is snapshotted at call time, so in-flight edits neither leak nor freeze', async () => {
+        // The editor keeps mutating its draft objects while a write is
+        // pending. Storing by reference would persist those post-click edits
+        // unvalidated — and immer's auto-freeze on commit would freeze the
+        // editor's live objects, silently breaking every later keystroke.
+        let release = (): void => {}
+        const gate = new Promise<void>((resolve) => {
+            release = resolve
+        })
+        const { plugin, tab } = createHarness({ saveData: () => gate })
+
+        const draft: Replacement[] = [{ key: 'today', value: 'x', enabled: true }]
+        const pending = tab.saveReplacements(draft)
+
+        // Edits made while the write is in flight, as the editor does.
+        const draftItem = draft[0]
+        if (draftItem) {
+            draftItem.key = 'not-yet-valid-'
+        }
+        draft.push({ key: '', value: '', enabled: true })
+
+        release()
+        await pending
+
+        expect(plugin.settings.replacements).toEqual([
+            { key: 'today', value: 'x', enabled: true }
+        ])
+        expect(Object.isFrozen(draftItem)).toBe(false)
+    })
 })
 
 describe('setControlValue', () => {

@@ -59,26 +59,27 @@ export class ExpanderSettingTab extends PluginSettingTab {
                         containerEl: setting.settingEl,
                         replacements: this.plugin.settings.replacements,
                         onSave: (replacements) => this.saveReplacements(replacements),
-                        onStructuralChange: (replacements): void => {
-                            void (async (): Promise<void> => {
-                                try {
-                                    await this.saveReplacements(replacements)
-                                } catch {
-                                    new Notice('Failed to save settings.')
-                                }
-                                // Re-render so the list reflects the committed
-                                // state (added/removed/reordered rows).
-                                this.update()
-                            })()
+                        // Rejections propagate to the editor, which shows the
+                        // failure notice and releases its structural latch.
+                        // update() runs only on success: rebuilding the pane
+                        // from committed state after a FAILED write would
+                        // discard every unsaved field edit.
+                        onStructuralChange: async (replacements): Promise<void> => {
+                            await this.saveReplacements(replacements)
+                            this.update()
                         }
                     })
                 }
             },
             // The folder lists stay at top level: a group's `items` accept
-            // only plain definitions and pages, never a native `list`, so the
-            // old "Folder scanning" section heading is carried by the two
-            // labeled rows instead (same shape as the dataview-serializer
-            // port).
+            // only plain definitions and pages, never a native `list`. The old
+            // "Folder scanning" section heading survives as a heading-only
+            // group so the pane keeps its structure.
+            {
+                type: 'group',
+                heading: 'Folder scanning',
+                items: []
+            },
             ...this.folderListDefinitions(
                 'foldersToScan',
                 'Folders to scan',
@@ -161,10 +162,17 @@ export class ExpanderSettingTab extends PluginSettingTab {
      *
      * Extracted from the editor's Save button so the write can be tested
      * without a DOM. The editor validates before calling; this only persists.
+     *
+     * The list is snapshotted SYNCHRONOUSLY, before the write queues: the
+     * editor keeps mutating its draft objects while a write is pending, so
+     * storing the array by reference would persist post-click (and possibly
+     * invalid) edits, and immer's auto-freeze on commit would freeze the
+     * editor's live objects, silently breaking every later keystroke.
      */
     async saveReplacements(replacements: Replacement[]): Promise<void> {
+        const snapshot = replacements.map((replacement) => ({ ...replacement }))
         await this.plugin.updateSettings((draft) => {
-            draft.replacements = replacements
+            draft.replacements = snapshot
         })
     }
 
@@ -228,11 +236,17 @@ export class ExpanderSettingTab extends PluginSettingTab {
                         cb.onClick(() => {
                             const raw = searchInput?.getValue() ?? ''
                             void (async (): Promise<void> => {
+                                // Re-render only when something was written:
+                                // a refused blank/duplicate is a no-op, and a
+                                // rebuild would still discard unsaved
+                                // replacement edits elsewhere in the pane.
                                 if (await this.addFolder(key, raw)) {
                                     searchInput?.setValue('')
+                                    this.update()
                                 }
-                                this.update()
-                            })()
+                            })().catch(() => {
+                                new Notice('Failed to save settings.')
+                            })
                         })
                     })
                 }
@@ -256,7 +270,11 @@ export class ExpanderSettingTab extends PluginSettingTab {
                             draft[key] = draft[key].filter((value) => value !== target)
                         })
                         this.update()
-                    })()
+                    })().catch(() => {
+                        // The committed list is unchanged on failure, so no
+                        // rebuild is needed — just say the write did not land.
+                        new Notice('Failed to save settings.')
+                    })
                 },
                 items: this.plugin.settings[key].map((folder) => ({
                     name: folder,
