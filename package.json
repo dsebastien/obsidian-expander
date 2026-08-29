@@ -51,14 +51,16 @@
         "format:check": "prettier --check .",
         "test": "bun test --isolate",
         "test:watch": "bun test --isolate --watch",
-        "validate": "bun run --parallel tsc test lint",
+        "validate": "bun run --parallel tsc test lint rules:check",
         "commit": "cz",
         "cm": "cz",
         "commit:lint": "commitlint --edit",
         "release:update-version": "bun scripts/update-version.ts",
         "release:version-bump": "bun scripts/version-bump.ts",
         "release:changelog": "bun scripts/generate-changelog.ts",
-        "release": "./scripts/release.sh"
+        "release": "./scripts/release.sh",
+        "rules:check": "bun scripts/rules-baseline.ts",
+        "rules:baseline": "bun scripts/rules-baseline.ts --write"
     },
     "devDependencies": {
         "@commitlint/cli": "^20.1.0",
