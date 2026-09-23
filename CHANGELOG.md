@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0](https://github.com/dsebastien/obsidian-expander/compare/1.0.0...1.1.0) (2026-09-23)
+
+### Features
+
+* **build:** fail the build on a lockfile the catalog review cannot parse ([5ace02c](https://github.com/dsebastien/obsidian-expander/commit/5ace02cb4676364d93427e3b42d4c86520bf1e47))
+* **build:** make the rule floor check that it is still wired in ([acfc096](https://github.com/dsebastien/obsidian-expander/commit/acfc0967134792106dcd363e11eb7a180aefda96))
+* **build:** refuse commits that loosen the rules instead of fixing the finding ([fd67469](https://github.com/dsebastien/obsidian-expander/commit/fd674698799e19fe9647b30e2bff635b062f8811))
+
+### Bug Fixes
+
+* **build:** exclude bun-types alongside @types/bun from the release-age gate ([a45486f](https://github.com/dsebastien/obsidian-expander/commit/a45486f038d11e299210d4de74aa9beb0093fb8a))
+* **build:** harden the release path from the template ([090de65](https://github.com/dsebastien/obsidian-expander/commit/090de657f281084d89db317d3d553c51b833be34))
+* **build:** rebuild versions.json from the published releases ([1edc1b0](https://github.com/dsebastien/obsidian-expander/commit/1edc1b0e0ee3fb6c3a84551bcde34d86c20882b1))
+* **deps:** move the fast-uri override off the vulnerable line ([1447fc1](https://github.com/dsebastien/obsidian-expander/commit/1447fc19fe357f2e913adcf714fb23f60775fd85))
+
 ## [1.0.0](https://github.com/dsebastien/obsidian-expander/compare/0.5.0...1.0.0) (2026-08-28)
 
 ### ⚠ BREAKING CHANGES
@@ -106,6 +121,7 @@ uses the declarative settings API introduced in Obsidian 1.13.
 * **all:** improved settings handling (prevent saving invalid duplicate keys) ([9b3c9c8](https://github.com/dsebastien/obsidian-expander/commit/9b3c9c8624a4eef00f680997e1eaf7c3e0e62b29))
 * **all:** improves functions ([2fb96d6](https://github.com/dsebastien/obsidian-expander/commit/2fb96d6678be750d73cf8259c8b013495f72421a))
 * **all:** shortened the syntax ([fab6429](https://github.com/dsebastien/obsidian-expander/commit/fab6429a581eb956597d00f935f2be99fce313c0))
+
 
 
 

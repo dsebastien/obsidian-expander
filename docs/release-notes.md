@@ -1,5 +1,20 @@
 # Release Notes
 
+## 1.1.0 (2026-09-23)
+
+### Features
+
+- **build:** fail the build on a lockfile the catalog review cannot parse
+- **build:** make the rule floor check that it is still wired in
+- **build:** refuse commits that loosen the rules instead of fixing the finding
+
+### Bug Fixes
+
+- **build:** exclude bun-types alongside @types/bun from the release-age gate
+- **build:** harden the release path from the template
+- **build:** rebuild versions.json from the published releases
+- **deps:** move the fast-uri override off the vulnerable line
+
 ## 1.0.0 (2026-08-28)
 
 ### ⚠ BREAKING CHANGES
