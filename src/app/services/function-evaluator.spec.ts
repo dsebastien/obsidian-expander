@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test'
 import { evaluateValue, isDynamicExpression } from './function-evaluator'
 import type { EvaluationContext } from '../types/evaluation-context'
-import type { TFile } from 'obsidian'
+import { TFile } from 'obsidian'
 
 /**
  * Create a mock TFile for testing file.* fields
@@ -13,7 +13,9 @@ function createMockFile(options: {
     ctime?: number
     mtime?: number
 }): TFile {
-    return {
+    // A real instance of the mocked TFile class (src/test-setup.ts), so no cast
+    // is needed and instanceof checks behave as they do in Obsidian.
+    return Object.assign(new TFile(), {
         basename: options.basename ?? 'TestNote',
         path: options.path ?? 'folder/TestNote.md',
         extension: options.extension ?? 'md',
@@ -25,7 +27,7 @@ function createMockFile(options: {
         vault: {} as TFile['vault'],
         name: options.basename ? `${options.basename}.${options.extension ?? 'md'}` : 'TestNote.md',
         parent: null
-    } as TFile
+    })
 }
 
 describe('isDynamicExpression', () => {

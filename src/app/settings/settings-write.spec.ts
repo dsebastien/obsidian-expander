@@ -19,7 +19,7 @@ async function settle(): Promise<void> {
     for (let i = 0; i < 20; i += 1) {
         await Promise.resolve()
     }
-    await new Promise((resolve) => setTimeout(resolve, 10))
+    await new Promise((resolve) => self.setTimeout(resolve, 10))
 }
 
 async function expectRejection(promise: Promise<unknown>, contains: string): Promise<void> {
