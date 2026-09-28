@@ -6,7 +6,8 @@ import { isPropertyKey, getPropertyName } from '../../../utils/frontmatter'
 import {
     markReplacementDraftDirty,
     markReplacementDraftSaved,
-    seedReplacementDraft
+    seedReplacementDraft,
+    structuralChangeProblem
 } from './replacement-draft'
 import type { ReplacementDraft } from './replacement-draft'
 
@@ -75,17 +76,11 @@ export function renderReplacementList(props: ReplacementListProps): void {
     // update() does not drop them.
     const localReplacements = seedReplacementDraft(draft, replacements)
 
-    // One save at a time: double-clicking a slow Save must not queue a second
-    // write and a second (possibly contradictory) notice.
-    let saveInFlight = false
-
-    // One structural write at a time. Each structural action persists a
-    // whole-list snapshot and the pane re-renders only after the write lands,
-    // so a second action started from the still-visible OLD rows would write
-    // a stale list (e.g. resurrecting an entry a pending delete removed).
-    // The latch drops on failure; on success the re-render replaces the
-    // whole editor anyway.
-    let structuralActionPending = false
+    // One write at a time, Save and structural edits alike, through the
+    // latch on the draft (it outlives this editor). Each write persists a
+    // whole-list snapshot and the pane re-renders only after it lands, so a
+    // second write started from the still-visible OLD rows would write a
+    // stale list (e.g. resurrecting an entry a pending delete removed).
 
     // Track the save button for enabling/disabling
     let saveButtonEl: HTMLButtonElement | null = null
@@ -98,13 +93,20 @@ export function renderReplacementList(props: ReplacementListProps): void {
 
         const isValid = validateReplacements(localReplacements)
 
-        if (draft.dirty && isValid && !saveInFlight) {
+        if (draft.dirty && isValid && draft.pending === null) {
             saveButtonEl.disabled = false
             saveButtonEl.classList.add('mod-cta')
         } else {
             saveButtonEl.disabled = true
             saveButtonEl.classList.remove('mod-cta')
         }
+    }
+
+    draft.refresh = updateSaveButtonState
+
+    const releaseLatch = (): void => {
+        draft.pending = null
+        draft.refresh?.()
     }
 
     const markDirty = (): void => {
@@ -117,14 +119,21 @@ export function renderReplacementList(props: ReplacementListProps): void {
      * on failure the draft stays on screen and the action can be retried.
      */
     const requestStructuralChange = (updated: Replacement[]): void => {
-        if (structuralActionPending) {
+        if (draft.pending !== null) {
             return
         }
-        structuralActionPending = true
-        void onStructuralChange(updated).catch(() => {
-            structuralActionPending = false
-            new Notice('Failed to save settings.')
-        })
+        const problem = structuralChangeProblem(updated)
+        if (problem !== null) {
+            new Notice(problem)
+            return
+        }
+        draft.pending = 'structural'
+        draft.refresh?.()
+        void onStructuralChange(updated)
+            .catch(() => {
+                new Notice('Failed to save settings.')
+            })
+            .finally(releaseLatch)
     }
 
     // Header
@@ -155,10 +164,10 @@ export function renderReplacementList(props: ReplacementListProps): void {
         saveButtonEl = button.buttonEl
         button.setButtonText('Save').onClick(() => {
             const isValid = validateReplacements(localReplacements)
-            if (!draft.dirty || !isValid || saveInFlight) {
+            if (!draft.dirty || !isValid || draft.pending !== null) {
                 return
             }
-            saveInFlight = true
+            draft.pending = 'save'
             updateSaveButtonState()
             // The generation captured here decides whether the draft may be
             // marked clean afterwards: a keystroke made while the write was
@@ -175,10 +184,7 @@ export function renderReplacementList(props: ReplacementListProps): void {
                 .catch(() => {
                     new Notice('Failed to save settings.')
                 })
-                .finally(() => {
-                    saveInFlight = false
-                    updateSaveButtonState()
-                })
+                .finally(releaseLatch)
         })
     })
     // Enabled right away when the editor was rebuilt over unsaved edits.

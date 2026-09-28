@@ -77,17 +77,9 @@ export class ExpanderSettingTab extends PluginSettingTab {
                         draft: this.replacementDraft,
                         onSave: (replacements) => this.saveReplacements(replacements),
                         // Rejections propagate to the editor, which shows the
-                        // failure notice and releases its structural latch.
-                        // update() runs only on success: rebuilding the pane
-                        // from committed state after a FAILED write would
-                        // discard every unsaved field edit.
-                        onStructuralChange: async (replacements): Promise<void> => {
-                            await this.saveReplacements(replacements)
-                            // The structural write committed the whole list,
-                            // field edits included: nothing is unsaved now.
-                            resetReplacementDraft(this.replacementDraft)
-                            this.update()
-                        }
+                        // failure notice and releases the write latch.
+                        onStructuralChange: (replacements) =>
+                            this.commitStructuralChange(replacements)
                     })
                     return () => editorEl.remove()
                 }
@@ -181,6 +173,20 @@ export class ExpanderSettingTab extends PluginSettingTab {
                 ]
             }
         ]
+    }
+
+    /**
+     * Persist a structural edit (add/delete/move) and rebuild the pane.
+     *
+     * The write commits the whole list, field edits included, so the draft
+     * is reset: nothing is unsaved any more. On failure nothing changes and
+     * the rejection reaches the editor; the pane is not rebuilt, since the
+     * committed list did not change.
+     */
+    async commitStructuralChange(replacements: Replacement[]): Promise<void> {
+        await this.saveReplacements(replacements)
+        resetReplacementDraft(this.replacementDraft)
+        this.update()
     }
 
     /**

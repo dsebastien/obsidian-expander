@@ -17,7 +17,9 @@ void mock.module('obsidian', () => ({
     App: class App {},
     TFile: class TFile {},
     Plugin: class Plugin {},
-    PluginSettingTab: class PluginSettingTab {},
+    PluginSettingTab: class PluginSettingTab {
+        hide(): void {}
+    },
     ItemView: class ItemView {},
     MarkdownRenderer: { render: async () => {} },
     Component: class Component {},

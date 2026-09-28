@@ -1,4 +1,5 @@
 import type { Replacement } from '../../types/plugin-settings.intf'
+import { validateKey } from '../../../utils/validation'
 
 /**
  * The replacements editor's unsaved draft, kept by the settings tab so it
@@ -19,10 +20,20 @@ export interface ReplacementDraft {
      * draft clean only if no edit landed while the write was in flight.
      */
     generation: number
+    /**
+     * The write in flight, if any. ONE latch for Save and structural edits
+     * (add/delete/move) alike, shared across editor rebuilds: a Save queued
+     * behind a pending delete would otherwise write the deleted key back
+     * (and keys are live once stored), and a rebuilt editor would offer a
+     * second write while the first is still pending.
+     */
+    pending: 'save' | 'structural' | null
+    /** Refreshes the live editor's Save button; set by each editor. */
+    refresh: (() => void) | null
 }
 
 export function createReplacementDraft(): ReplacementDraft {
-    return { replacements: null, dirty: false, generation: 0 }
+    return { replacements: null, dirty: false, generation: 0, pending: null, refresh: null }
 }
 
 /**
@@ -51,6 +62,32 @@ export function markReplacementDraftSaved(draft: ReplacementDraft, savedGenerati
     if (draft.generation === savedGeneration) {
         draft.dirty = false
     }
+}
+
+/**
+ * Why a structural edit must not be written, or null when it may.
+ *
+ * A structural edit persists the whole list, unsaved field edits included,
+ * and replacement keys are live the moment they are stored. So the same
+ * rule as Save applies to every key that could match: valid and unique. An
+ * empty key is allowed (it matches nothing): it is how a new row starts.
+ */
+export function structuralChangeProblem(updated: readonly Replacement[]): string | null {
+    const seen = new Set<string>()
+    for (const { key } of updated) {
+        if (key.trim() === '') {
+            continue
+        }
+        const error = validateKey(key)
+        if (error) {
+            return `Fix the key "${key}" first: ${error}`
+        }
+        if (seen.has(key)) {
+            return `Fix the duplicate key "${key}" first.`
+        }
+        seen.add(key)
+    }
+    return null
 }
 
 /** Forget the draft: the next editor starts from committed settings. */

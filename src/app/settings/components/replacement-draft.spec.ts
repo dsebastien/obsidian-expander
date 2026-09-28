@@ -4,7 +4,8 @@ import {
     markReplacementDraftDirty,
     markReplacementDraftSaved,
     resetReplacementDraft,
-    seedReplacementDraft
+    seedReplacementDraft,
+    structuralChangeProblem
 } from './replacement-draft'
 import type { Replacement } from '../../types/plugin-settings.intf'
 
@@ -57,5 +58,21 @@ describe('replacement draft', () => {
         resetReplacementDraft(draft)
         expect(draft.dirty).toBe(false)
         expect(seedReplacementDraft(draft, committed)[0]!.value).toBe('Ada')
+    })
+})
+
+describe('structural edits', () => {
+    const row = (key: string): Replacement => ({ key, value: 'v', enabled: true })
+
+    test('may carry a new, still empty row', () => {
+        expect(structuralChangeProblem([row('name'), row('')])).toBeNull()
+    })
+
+    test('never store an invalid key, which would go live at once', () => {
+        expect(structuralChangeProblem([row('Not Kebab')])).toContain('Not Kebab')
+    })
+
+    test('never store a duplicate key', () => {
+        expect(structuralChangeProblem([row('name'), row('name')])).toContain('duplicate')
     })
 })

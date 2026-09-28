@@ -3,6 +3,8 @@ import { produce } from 'immer'
 import { ExpanderPlugin } from '../plugin'
 import { ExpanderSettingTab } from './settings-tab'
 import { DEFAULT_SETTINGS } from '../types/plugin-settings.intf'
+import { createReplacementDraft, markReplacementDraftDirty } from './components/replacement-draft'
+import type { ReplacementDraft } from './components/replacement-draft'
 import type { PluginSettings, Replacement } from '../types/plugin-settings.intf'
 
 /**
@@ -324,5 +326,50 @@ describe('setControlValue', () => {
         )
         expect(tab.getControlValue('showRefreshButton')).toBe(settings.showRefreshButton)
         expect(tab.getControlValue('nope')).toBeUndefined()
+    })
+})
+
+describe('replacement draft on the tab', () => {
+    function withDraft(h: Harness): { draft: ReplacementDraft; updates: () => number } {
+        const draft = createReplacementDraft()
+        draft.replacements = [{ key: 'typed', value: 'x', enabled: true }]
+        markReplacementDraftDirty(draft)
+        let updates = 0
+        const internals = h.tab as unknown as Record<string, unknown>
+        internals['replacementDraft'] = draft
+        internals['update'] = (): void => {
+            updates += 1
+        }
+        return { draft, updates: () => updates }
+    }
+
+    test('a committed structural edit resets the draft and rebuilds the pane', async () => {
+        const h = createHarness()
+        const { draft, updates } = withDraft(h)
+        await h.tab.commitStructuralChange([{ key: 'kept', value: 'y', enabled: true }])
+        expect(h.plugin.settings.replacements.map((r) => r.key)).toEqual(['kept'])
+        expect(draft.dirty).toBe(false)
+        expect(draft.replacements).toBeNull()
+        expect(updates()).toBe(1)
+    })
+
+    test('a failed structural edit keeps the unsaved draft and the pane as they are', async () => {
+        const h = createHarness({ saveData: () => Promise.reject(new Error('disk full')) })
+        const { draft, updates } = withDraft(h)
+        await expectRejection(
+            h.tab.commitStructuralChange([{ key: 'kept', value: 'y', enabled: true }]),
+            'disk full'
+        )
+        expect(draft.dirty).toBe(true)
+        expect(draft.replacements?.[0]?.key).toBe('typed')
+        expect(updates()).toBe(0)
+    })
+
+    test('leaving the pane discards the unsaved draft', () => {
+        const h = createHarness()
+        const { draft } = withDraft(h)
+        h.tab.hide()
+        expect(draft.dirty).toBe(false)
+        expect(draft.replacements).toBeNull()
     })
 })
