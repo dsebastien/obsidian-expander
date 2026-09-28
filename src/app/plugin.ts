@@ -1,6 +1,6 @@
 import { registerWhatsNewView } from './whats-new'
 import { Plugin, TFile } from 'obsidian'
-import { DEFAULT_SETTINGS } from './types/plugin-settings.intf'
+import { createDefaultSettings } from './types/plugin-settings.intf'
 import type { PluginSettings } from './types/plugin-settings.intf'
 import { ExpanderSettingTab } from './settings/settings-tab'
 import { log } from '../utils/log'
@@ -20,7 +20,7 @@ export class ExpanderPlugin extends Plugin {
     /**
      * The plugin settings are immutable
      */
-    override settings: PluginSettings = produce(DEFAULT_SETTINGS, () => DEFAULT_SETTINGS)
+    override settings: PluginSettings = produce(createDefaultSettings(), () => {})
 
     /**
      * Service for evaluating and managing expansions
@@ -140,11 +140,11 @@ export class ExpanderPlugin extends Plugin {
 
         if (!loadedSettings) {
             log('Using default settings', 'debug')
-            this.settings = produce(DEFAULT_SETTINGS, () => DEFAULT_SETTINGS)
+            this.settings = produce(createDefaultSettings(), () => {})
             return
         }
 
-        this.settings = produce(DEFAULT_SETTINGS, (draft: Draft<PluginSettings>) => {
+        this.settings = produce(createDefaultSettings(), (draft: Draft<PluginSettings>) => {
             // Merge loaded settings with defaults
             if (loadedSettings.replacements !== undefined) {
                 draft.replacements = loadedSettings.replacements
