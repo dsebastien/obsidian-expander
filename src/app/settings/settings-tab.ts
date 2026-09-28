@@ -50,13 +50,19 @@ export class ExpanderSettingTab extends PluginSettingTab {
                 desc: 'Define key-value pairs for expansion.',
                 // The whole draft editor lives in one row: local edits, inline
                 // validation, and the Save button that commits the list.
-                render: (setting): void => {
+                render: (setting): (() => void) => {
                     setting.infoEl.remove() // the editor draws its own heading
                     // `.setting-item` is a flex ROW; the editor is a stack of
                     // full-width rows, so it needs block layout.
                     setting.settingEl.addClass('exp-settings-embed')
+                    // In a wrapper removed by the returned cleanup: update()
+                    // (after every structural change) re-runs this hook on the
+                    // SAME row and only resets its control area, so an editor
+                    // drawn straight into the row would stack, and the stale
+                    // copy's Save would write an outdated list.
+                    const editorEl = setting.settingEl.createDiv()
                     renderReplacementList({
-                        containerEl: setting.settingEl,
+                        containerEl: editorEl,
                         replacements: this.plugin.settings.replacements,
                         onSave: (replacements) => this.saveReplacements(replacements),
                         // Rejections propagate to the editor, which shows the
@@ -69,6 +75,7 @@ export class ExpanderSettingTab extends PluginSettingTab {
                             this.update()
                         }
                     })
+                    return () => editorEl.remove()
                 }
             },
             // The folder lists stay at top level: a group's `items` accept
@@ -141,15 +148,20 @@ export class ExpanderSettingTab extends PluginSettingTab {
                         name: 'Support',
                         // Not a setting — keep it out of the settings search.
                         searchable: false,
-                        render: (setting): void => {
+                        render: (setting): (() => void) => {
                             setting.infoEl.remove() // the section draws its own headings
                             // `.setting-item` is a flex ROW. The support block
                             // is a stack of full-width rows, so without this it
                             // would lay heading, buttons and badge side by side.
                             setting.settingEl.addClass('exp-settings-embed')
-                            renderSupportSection(setting.settingEl, (el) => {
+                            // In a wrapper removed by the returned cleanup: update() re-runs
+                            // this hook on the SAME row and only resets its control area, so
+                            // content appended straight to settingEl would pile up.
+                            const blockEl = setting.settingEl.createDiv()
+                            renderSupportSection(blockEl, (el) => {
                                 this.renderBuyMeACoffeeBadge(el)
                             })
+                            return () => blockEl.remove()
                         }
                     }
                 ]
