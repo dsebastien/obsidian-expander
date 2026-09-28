@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0](https://github.com/dsebastien/obsidian-expander/compare/1.1.1...1.2.0) (2026-09-28)
+
+### Fixed
+
+- **Unsaved replacement edits are no longer lost.** Adding or removing a scanned folder, or adding, deleting or moving a replacement, used to redraw the settings and silently drop the edits you had not saved yet. They now stay on screen, still unsaved, with Save available.
+- **A deleted replacement can no longer come back.** Clicking Save while a delete was still being written could write the deleted key back, where it kept expanding in your notes. Saves and list changes now happen one at a time.
+- **Invalid keys are never stored.** Adding, deleting or moving a replacement saves the whole list, and could store a key that Save would have refused (not kebab-case, or a duplicate). These actions now stop and tell you which key to fix first.
+
 ## [1.1.1](https://github.com/dsebastien/obsidian-expander/compare/1.1.0...1.1.1) (2026-09-28)
 
 ### Bug Fixes
@@ -127,6 +135,7 @@ uses the declarative settings API introduced in Obsidian 1.13.
 * **all:** improved settings handling (prevent saving invalid duplicate keys) ([9b3c9c8](https://github.com/dsebastien/obsidian-expander/commit/9b3c9c8624a4eef00f680997e1eaf7c3e0e62b29))
 * **all:** improves functions ([2fb96d6](https://github.com/dsebastien/obsidian-expander/commit/2fb96d6678be750d73cf8259c8b013495f72421a))
 * **all:** shortened the syntax ([fab6429](https://github.com/dsebastien/obsidian-expander/commit/fab6429a581eb956597d00f935f2be99fce313c0))
+
 
 
 
