@@ -3,6 +3,12 @@ import type { Replacement } from '../../types/plugin-settings.intf'
 import { validateKey } from '../../../utils/validation'
 import { isFunctionExpression, evaluateValue } from '../../services/function-evaluator'
 import { isPropertyKey, getPropertyName } from '../../../utils/frontmatter'
+import {
+    markReplacementDraftDirty,
+    markReplacementDraftSaved,
+    seedReplacementDraft
+} from './replacement-draft'
+import type { ReplacementDraft } from './replacement-draft'
 
 /**
  * Props for the replacement list component
@@ -10,6 +16,11 @@ import { isPropertyKey, getPropertyName } from '../../../utils/frontmatter'
 interface ReplacementListProps {
     containerEl: HTMLElement
     replacements: Replacement[]
+    /**
+     * The unsaved draft, owned by the settings tab so it survives the
+     * editor being rebuilt by `update()`.
+     */
+    draft: ReplacementDraft
     /**
      * Persists the list. Resolves when the write has landed; rejects when it
      * has not — the Save button reports success only on resolution, so the
@@ -23,13 +34,6 @@ interface ReplacementListProps {
      * screen and releases its latch so the action can be retried.
      */
     onStructuralChange: (replacements: Replacement[]) => Promise<void>
-}
-
-/**
- * Deep clone replacements to create local mutable state
- */
-function cloneReplacements(replacements: Replacement[]): Replacement[] {
-    return replacements.map((r) => ({ ...r }))
 }
 
 /**
@@ -64,15 +68,12 @@ function validateReplacements(replacements: Replacement[]): boolean {
  * Render the replacement list component
  */
 export function renderReplacementList(props: ReplacementListProps): void {
-    const { containerEl, replacements, onSave, onStructuralChange } = props
+    const { containerEl, replacements, draft, onSave, onStructuralChange } = props
 
-    // Local mutable state - changes here don't trigger re-renders
-    const localReplacements = cloneReplacements(replacements)
-    let hasUnsavedChanges = false
-
-    // Counts edits; the Save handler captures it at click time so a keystroke
-    // made while the write is in flight is not wrongly marked clean.
-    let dirtyGeneration = 0
+    // Local mutable state - changes here don't trigger re-renders. Seeded
+    // from the tab's draft when it holds unsaved edits, so a rebuild by
+    // update() does not drop them.
+    const localReplacements = seedReplacementDraft(draft, replacements)
 
     // One save at a time: double-clicking a slow Save must not queue a second
     // write and a second (possibly contradictory) notice.
@@ -97,7 +98,7 @@ export function renderReplacementList(props: ReplacementListProps): void {
 
         const isValid = validateReplacements(localReplacements)
 
-        if (hasUnsavedChanges && isValid && !saveInFlight) {
+        if (draft.dirty && isValid && !saveInFlight) {
             saveButtonEl.disabled = false
             saveButtonEl.classList.add('mod-cta')
         } else {
@@ -107,13 +108,7 @@ export function renderReplacementList(props: ReplacementListProps): void {
     }
 
     const markDirty = (): void => {
-        hasUnsavedChanges = true
-        dirtyGeneration += 1
-        updateSaveButtonState()
-    }
-
-    const markClean = (): void => {
-        hasUnsavedChanges = false
+        markReplacementDraftDirty(draft)
         updateSaveButtonState()
     }
 
@@ -160,7 +155,7 @@ export function renderReplacementList(props: ReplacementListProps): void {
         saveButtonEl = button.buttonEl
         button.setButtonText('Save').onClick(() => {
             const isValid = validateReplacements(localReplacements)
-            if (!hasUnsavedChanges || !isValid || saveInFlight) {
+            if (!draft.dirty || !isValid || saveInFlight) {
                 return
             }
             saveInFlight = true
@@ -169,14 +164,12 @@ export function renderReplacementList(props: ReplacementListProps): void {
             // marked clean afterwards: a keystroke made while the write was
             // in flight was not part of the persisted snapshot and must keep
             // the draft dirty.
-            const savedGeneration = dirtyGeneration
+            const savedGeneration = draft.generation
             // Mark clean only after the write lands; a failed persist keeps
             // the draft dirty so Save stays available to retry.
             void onSave(localReplacements)
                 .then(() => {
-                    if (dirtyGeneration === savedGeneration) {
-                        markClean()
-                    }
+                    markReplacementDraftSaved(draft, savedGeneration)
                     new Notice('Settings saved')
                 })
                 .catch(() => {
@@ -187,9 +180,9 @@ export function renderReplacementList(props: ReplacementListProps): void {
                     updateSaveButtonState()
                 })
         })
-        // Initially disabled
-        button.buttonEl.disabled = true
     })
+    // Enabled right away when the editor was rebuilt over unsaved edits.
+    updateSaveButtonState()
 
     // List of replacements
     const listEl = containerEl.createDiv({ cls: 'exp-replacement-list' })

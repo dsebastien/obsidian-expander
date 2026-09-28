@@ -3,6 +3,7 @@ import type { App, SearchComponent, SettingDefinitionItem } from 'obsidian'
 import type { ExpanderPlugin } from '../plugin'
 import type { Replacement } from '../types/plugin-settings.intf'
 import { renderReplacementList } from './components/replacement-list'
+import { createReplacementDraft, resetReplacementDraft } from './components/replacement-draft'
 import { FolderSuggest } from '../utils/folder-suggest'
 import { BUY_ME_A_COFFEE_BADGE_DATA_URL } from '../assets/buy-me-a-coffee'
 import { renderSupportSection } from '../ui/support-links'
@@ -38,6 +39,13 @@ type FolderListKey = 'foldersToScan' | 'ignoredFolders'
 export class ExpanderSettingTab extends PluginSettingTab {
     plugin: ExpanderPlugin
 
+    /**
+     * The replacements editor's unsaved draft. Kept here, not in the editor,
+     * because update() rebuilds the editor after every structural change and
+     * folder add/remove; the rebuilt editor is seeded from it.
+     */
+    private readonly replacementDraft = createReplacementDraft()
+
     constructor(app: App, plugin: ExpanderPlugin) {
         super(app, plugin)
         this.plugin = plugin
@@ -57,13 +65,16 @@ export class ExpanderSettingTab extends PluginSettingTab {
                     setting.settingEl.addClass('exp-settings-embed')
                     // In a wrapper removed by the returned cleanup: update()
                     // (after every structural change) re-runs this hook on the
-                    // SAME row and only resets its control area, so an editor
-                    // drawn straight into the row would stack, and the stale
-                    // copy's Save would write an outdated list.
+                    // SAME row and resets only its name, description and
+                    // control area, so an editor drawn straight into the row
+                    // would stack, and the stale copy's Save would write an
+                    // outdated list. Unsaved edits survive the rebuild through
+                    // replacementDraft.
                     const editorEl = setting.settingEl.createDiv()
                     renderReplacementList({
                         containerEl: editorEl,
                         replacements: this.plugin.settings.replacements,
+                        draft: this.replacementDraft,
                         onSave: (replacements) => this.saveReplacements(replacements),
                         // Rejections propagate to the editor, which shows the
                         // failure notice and releases its structural latch.
@@ -72,6 +83,9 @@ export class ExpanderSettingTab extends PluginSettingTab {
                         // discard every unsaved field edit.
                         onStructuralChange: async (replacements): Promise<void> => {
                             await this.saveReplacements(replacements)
+                            // The structural write committed the whole list,
+                            // field edits included: nothing is unsaved now.
+                            resetReplacementDraft(this.replacementDraft)
                             this.update()
                         }
                     })
@@ -155,8 +169,8 @@ export class ExpanderSettingTab extends PluginSettingTab {
                             // would lay heading, buttons and badge side by side.
                             setting.settingEl.addClass('exp-settings-embed')
                             // In a wrapper removed by the returned cleanup: update() re-runs
-                            // this hook on the SAME row and only resets its control area, so
-                            // content appended straight to settingEl would pile up.
+                            // this hook on the SAME row and resets only its name, description
+                            // and control area, so content appended to settingEl would pile up.
                             const blockEl = setting.settingEl.createDiv()
                             renderSupportSection(blockEl, (el) => {
                                 this.renderBuyMeACoffeeBadge(el)
@@ -167,6 +181,15 @@ export class ExpanderSettingTab extends PluginSettingTab {
                 ]
             }
         ]
+    }
+
+    /**
+     * Leaving the pane discards unsaved replacement edits, as it always has:
+     * the next opening starts from committed settings.
+     */
+    override hide(): void {
+        resetReplacementDraft(this.replacementDraft)
+        super.hide()
     }
 
     /**
@@ -249,9 +272,9 @@ export class ExpanderSettingTab extends PluginSettingTab {
                             const raw = searchInput?.getValue() ?? ''
                             void (async (): Promise<void> => {
                                 // Re-render only when something was written:
-                                // a refused blank/duplicate is a no-op, and a
-                                // rebuild would still discard unsaved
-                                // replacement edits elsewhere in the pane.
+                                // a refused blank/duplicate is a no-op. The
+                                // rebuild keeps unsaved replacement edits
+                                // (replacementDraft).
                                 if (await this.addFolder(key, raw)) {
                                     searchInput?.setValue('')
                                     this.update()
